@@ -71,7 +71,6 @@
     "custom_connection_label": "Custom Connection URL:",
     "custom_connection_placeholder": "Eg: https://example.com:8317",
     "custom_connection_hint": "By default the current URL is used. Override it here if needed.",
-    "remember_password_label": "Remember password",
     "management_key_label": "Management Key:",
     "management_key_placeholder": "Enter the management key",
     "submit_button": "Login",
@@ -86,7 +85,8 @@
     "error_not_found": "Management API not found, confirm the server address points to the CLIProxyAPI backend",
     "error_server": "Backend failed while handling the management request, check the server logs",
     "error_cors": "Cross-origin request blocked, please check server configuration",
-    "error_ssl": "SSL/TLS certificate verification failed"
+    "error_ssl": "SSL/TLS certificate verification failed",
+    "management_key_session_hint": "The management key stays in memory for this browser session and is cleared when you refresh or close the page."
   },
   "header": {
     "refresh_all": "Refresh All",

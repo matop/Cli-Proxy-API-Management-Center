@@ -71,7 +71,6 @@
     "custom_connection_label": "自訂連線位址:",
     "custom_connection_placeholder": "例如: https://example.com:8317",
     "custom_connection_hint": "預設使用目前存取位址，若需要可手動輸入其他位址。",
-    "remember_password_label": "記住密碼",
     "management_key_label": "管理金鑰:",
     "management_key_placeholder": "請輸入管理金鑰",
     "submit_button": "登入",
@@ -86,7 +85,8 @@
     "error_not_found": "找不到 Management API，請確認服務位址指向 CLIProxyAPI 後端",
     "error_server": "後端處理管理介面時發生錯誤，請查看服務日誌",
     "error_cors": "跨域請求被阻擋，請檢查伺服器設定",
-    "error_ssl": "SSL/TLS 憑證驗證失敗"
+    "error_ssl": "SSL/TLS 憑證驗證失敗",
+    "management_key_session_hint": "管理金鑰僅保存在目前瀏覽器工作階段的記憶體中，重新整理或關閉頁面後會清除。"
   },
   "header": {
     "refresh_all": "全部重新整理",

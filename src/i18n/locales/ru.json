@@ -71,7 +71,6 @@
     "custom_connection_label": "Пользовательский URL подключения:",
     "custom_connection_placeholder": "Напр.: https://example.com:8317",
     "custom_connection_hint": "По умолчанию используется текущий URL. При необходимости замените его.",
-    "remember_password_label": "Запомнить пароль",
     "management_key_label": "Ключ управления:",
     "management_key_placeholder": "Введите ключ управления",
     "submit_button": "Войти",
@@ -86,7 +85,8 @@
     "error_not_found": "Management API не найден, проверьте, что адрес указывает на backend CLIProxyAPI",
     "error_server": "Backend не смог обработать запрос управления, проверьте журналы сервера",
     "error_cors": "Блокировка CORS, проверьте конфигурацию сервера",
-    "error_ssl": "Ошибка проверки SSL/TLS сертификата"
+    "error_ssl": "Ошибка проверки SSL/TLS сертификата",
+    "management_key_session_hint": "Ключ управления хранится в памяти только до обновления или закрытия страницы."
   },
   "header": {
     "refresh_all": "Обновить всё",

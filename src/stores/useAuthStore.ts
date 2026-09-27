@@ -13,6 +13,7 @@ import { useConfigStore } from './useConfigStore';
 import { useModelsStore } from './useModelsStore';
 import { useQuotaStore } from './useQuotaStore';
 import { detectApiBaseFromLocation, normalizeApiBase } from '@/utils/connection';
+import { sanitizePersistedAuthState, partializeAuthState } from './authPersistence';
 
 interface AuthStoreState extends AuthState {
   connectionStatus: ConnectionStatus;
@@ -35,7 +36,6 @@ export const useAuthStore = create<AuthStoreState>()(
       isAuthenticated: false,
       apiBase: '',
       managementKey: '',
-      rememberPassword: false,
       serverVersion: null,
       serverBuildDate: null,
       supportsPlugin: false,
@@ -46,42 +46,23 @@ export const useAuthStore = create<AuthStoreState>()(
         if (restoreSessionPromise) return restoreSessionPromise;
 
         restoreSessionPromise = (async () => {
-          obfuscatedStorage.migratePlaintextKeys(['apiBase', 'apiUrl', 'managementKey']);
+          obfuscatedStorage.migratePlaintextKeys(['apiBase', 'apiUrl']);
+          obfuscatedStorage.removeItem('managementKey');
+          localStorage.removeItem('isLoggedIn');
 
-          const wasLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
           const legacyBase =
             obfuscatedStorage.getItem<string>('apiBase') ||
             obfuscatedStorage.getItem<string>('apiUrl', { encrypt: true });
-          const legacyKey = obfuscatedStorage.getItem<string>('managementKey');
 
-          const { apiBase, managementKey, rememberPassword } = get();
+          const { apiBase } = get();
           const resolvedBase = normalizeApiBase(
             apiBase || legacyBase || detectApiBaseFromLocation()
           );
-          const resolvedKey = managementKey || legacyKey || '';
-          const resolvedRememberPassword =
-            rememberPassword || Boolean(managementKey) || Boolean(legacyKey);
-
           set({
             apiBase: resolvedBase,
-            managementKey: resolvedKey,
-            rememberPassword: resolvedRememberPassword,
+            managementKey: '',
           });
-          apiClient.setConfig({ apiBase: resolvedBase, managementKey: resolvedKey });
-
-          if (wasLoggedIn && resolvedBase && resolvedKey) {
-            try {
-              await get().login({
-                apiBase: resolvedBase,
-                managementKey: resolvedKey,
-                rememberPassword: resolvedRememberPassword,
-              });
-              return true;
-            } catch (error) {
-              console.warn('Auto login failed:', error);
-              return false;
-            }
-          }
+          apiClient.setConfig({ apiBase: resolvedBase, managementKey: '' });
 
           return false;
         })();
@@ -93,7 +74,6 @@ export const useAuthStore = create<AuthStoreState>()(
       login: async (credentials) => {
         const apiBase = normalizeApiBase(credentials.apiBase);
         const managementKey = credentials.managementKey.trim();
-        const rememberPassword = credentials.rememberPassword ?? get().rememberPassword ?? false;
 
         try {
           set({
@@ -119,14 +99,8 @@ export const useAuthStore = create<AuthStoreState>()(
             isAuthenticated: true,
             apiBase,
             managementKey,
-            rememberPassword,
             connectionStatus: 'connected',
           });
-          if (rememberPassword) {
-            localStorage.setItem('isLoggedIn', 'true');
-          } else {
-            localStorage.removeItem('isLoggedIn');
-          }
         } catch (error: unknown) {
           set({ connectionStatus: 'error' });
           throw error;
@@ -199,8 +173,13 @@ export const useAuthStore = create<AuthStoreState>()(
       name: STORAGE_KEY_AUTH,
       storage: createJSONStorage(() => ({
         getItem: (name) => {
-          const data = obfuscatedStorage.getItem<AuthStoreState>(name);
-          return data ? JSON.stringify(data) : null;
+          const data = obfuscatedStorage.getItem<Record<string, unknown>>(name);
+          if (!data) return null;
+          const safeData = sanitizePersistedAuthState(data);
+          if (JSON.stringify(safeData) !== JSON.stringify(data)) {
+            obfuscatedStorage.setItem(name, safeData);
+          }
+          return JSON.stringify(safeData);
         },
         setItem: (name, value) => {
           obfuscatedStorage.setItem(name, JSON.parse(value));
@@ -209,13 +188,7 @@ export const useAuthStore = create<AuthStoreState>()(
           obfuscatedStorage.removeItem(name);
         },
       })),
-      partialize: (state) => ({
-        apiBase: state.apiBase,
-        ...(state.rememberPassword ? { managementKey: state.managementKey } : {}),
-        rememberPassword: state.rememberPassword,
-        serverVersion: state.serverVersion,
-        serverBuildDate: state.serverBuildDate,
-      }),
+      partialize: (state: AuthStoreState) => partializeAuthState(state),
     }
   )
 );

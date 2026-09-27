@@ -71,7 +71,6 @@
     "custom_connection_label": "自定义连接地址:",
     "custom_connection_placeholder": "例如: https://example.com:8317",
     "custom_connection_hint": "默认使用当前访问地址，若需要可手动输入其他地址。",
-    "remember_password_label": "记住密码",
     "management_key_label": "管理密钥:",
     "management_key_placeholder": "请输入管理密钥",
     "submit_button": "登录",
@@ -86,7 +85,8 @@
     "error_not_found": "未找到 Management API，请确认服务地址指向 CLIProxyAPI 后端",
     "error_server": "后端处理管理接口时发生错误，请查看服务日志",
     "error_cors": "跨域请求被阻止，请检查服务器配置",
-    "error_ssl": "SSL/TLS 证书验证失败"
+    "error_ssl": "SSL/TLS 证书验证失败",
+    "management_key_session_hint": "管理密钥仅保存在当前浏览器会话的内存中，刷新或关闭页面后会清除。"
   },
   "header": {
     "refresh_all": "刷新全部",

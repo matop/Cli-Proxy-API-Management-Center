@@ -7,7 +7,6 @@
 export interface LoginCredentials {
   apiBase: string;
   managementKey: string;
-  rememberPassword?: boolean;
 }
 
 // 认证状态
@@ -15,7 +14,6 @@ export interface AuthState {
   isAuthenticated: boolean;
   apiBase: string;
   managementKey: string;
-  rememberPassword: boolean;
   serverVersion: string | null;
   serverBuildDate: string | null;
   supportsPlugin: boolean;

@@ -92,14 +92,11 @@ export function LoginPage() {
   const login = useAuthStore((state) => state.login);
   const restoreSession = useAuthStore((state) => state.restoreSession);
   const storedBase = useAuthStore((state) => state.apiBase);
-  const storedKey = useAuthStore((state) => state.managementKey);
-  const storedRememberPassword = useAuthStore((state) => state.rememberPassword);
 
   const [apiBase, setApiBase] = useState('');
   const [managementKey, setManagementKey] = useState('');
   const [showCustomBase, setShowCustomBase] = useState(false);
   const [showKey, setShowKey] = useState(false);
-  const [rememberPassword, setRememberPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [autoLoading, setAutoLoading] = useState(true);
   const [autoLoginSuccess, setAutoLoginSuccess] = useState(false);
@@ -137,8 +134,7 @@ export function LoginPage() {
           }, 1500);
         } else {
           setApiBase(storedBase || detectedBase);
-          setManagementKey(storedKey || '');
-          setRememberPassword(storedRememberPassword || Boolean(storedKey));
+          setManagementKey('');
         }
       } finally {
         // 自动登录成功时 showSplash 仍由 autoLoginSuccess 维持，可无条件结束 loading
@@ -163,7 +159,6 @@ export function LoginPage() {
       await login({
         apiBase: baseToUse,
         managementKey: managementKey.trim(),
-        rememberPassword,
       });
       showNotification(t('common.connected_status'), 'success');
       navigate('/', { replace: true });
@@ -180,7 +175,6 @@ export function LoginPage() {
     login,
     managementKey,
     navigate,
-    rememberPassword,
     showNotification,
     t,
   ]);
@@ -279,6 +273,7 @@ export function LoginPage() {
                 autoFocus
                 label={t('login.management_key_label')}
                 placeholder={t('login.management_key_placeholder')}
+                hint={t('login.management_key_session_hint')}
                 type={showKey ? 'text' : 'password'}
                 name="cpa-management-key"
                 autoComplete="current-password"
@@ -305,16 +300,6 @@ export function LoginPage() {
                   </button>
                 }
               />
-
-              <div className={styles.toggleAdvanced}>
-                <SelectionCheckbox
-                  checked={rememberPassword}
-                  onChange={setRememberPassword}
-                  ariaLabel={t('login.remember_password_label')}
-                  label={t('login.remember_password_label')}
-                  labelClassName={styles.toggleLabel}
-                />
-              </div>
 
               <Button fullWidth onClick={handleSubmit} loading={loading}>
                 {loading ? t('login.submitting') : t('login.submit_button')}
