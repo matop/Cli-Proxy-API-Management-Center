@@ -219,9 +219,11 @@ export function AccountsPanel({
                             >
                               {window.remainingPercent === null
                                 ? '—'
-                                : t('dashboard.accounts_left', {
-                                    percent: Math.round(window.remainingPercent),
-                                  })}
+                                : tone === 'critical'
+                                  ? t('quota_management.percent_exhausted')
+                                  : t('dashboard.accounts_left', {
+                                      percent: Math.round(window.remainingPercent),
+                                    })}
                             </span>
                             <span
                               className={`${styles.windowReset} ${

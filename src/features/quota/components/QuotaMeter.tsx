@@ -28,15 +28,21 @@ export interface QuotaMeterProps {
 export function QuotaMeter({ percent, classes, index }: QuotaMeterProps) {
   const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
   const normalized = percent === null ? null : clamp(percent, 0, 100);
-  const fillClass = classes[FILL_CLASS[quotaLevel(normalized)]];
+  const level = quotaLevel(normalized);
+  const fillClass = classes[FILL_CLASS[level]];
   const widthPercent = Math.round((normalized ?? 0) * 100) / 100;
   const style: CSSProperties & { '--meter-index'?: number } = { width: `${widthPercent}%` };
   if (index !== undefined) {
     style['--meter-index'] = index;
   }
 
+  const trackClass =
+    level === 'exhausted' && classes.quotaBarEmpty
+      ? `${classes.quotaBar} ${classes.quotaBarEmpty}`
+      : classes.quotaBar;
+
   return (
-    <div className={classes.quotaBar}>
+    <div className={trackClass}>
       <div className={`${classes.quotaBarFill} ${fillClass}`} style={style} />
     </div>
   );

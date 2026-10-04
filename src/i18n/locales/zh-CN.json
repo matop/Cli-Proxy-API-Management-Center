@@ -1303,6 +1303,8 @@
     "percent_left": "剩余 {{percent}}%",
     "percent_left_aria": "额度剩余 {{percent}}%",
     "percent_left_low_aria": "额度不足：剩余 {{percent}}%",
+    "percent_exhausted": "已耗尽",
+    "percent_exhausted_aria": "额度已耗尽：剩余 0%，重置前不可用",
     "use_first_badge": "优先使用 · 剩余 {{percent}}%，{{relative}}作废",
     "use_first_hint": "此账号最紧的全账号额度窗口比其他账号更早重置，单模型额度不计入。未用完的额度会在重置时作废。",
     "updated_relative": "{{relative}}更新",

@@ -54,6 +54,9 @@ export interface QuotaClassMap {
    */
   quotaPercentLow?: string;
   quotaUseFirst?: string;
+  /** 0% left (quotaLevel 'exhausted'): blocked chip and tinted empty track. */
+  quotaPercentEmpty?: string;
+  quotaBarEmpty?: string;
 }
 
 export const QUOTA_CLASS_KEYS: readonly (keyof QuotaClassMap)[] = [
@@ -92,7 +95,12 @@ export const QUOTA_CLASS_KEYS: readonly (keyof QuotaClassMap)[] = [
 ];
 
 /** Copied when the host stylesheet defines them; never required. */
-export const QUOTA_OPTIONAL_CLASS_KEYS = ['quotaPercentLow', 'quotaUseFirst'] as const;
+export const QUOTA_OPTIONAL_CLASS_KEYS = [
+  'quotaPercentLow',
+  'quotaUseFirst',
+  'quotaPercentEmpty',
+  'quotaBarEmpty',
+] as const;
 
 /** 宿主 CSS Module → 类型化契约。缺键即抛（fail-loud），`source` 用于报错定位。 */
 export function bindQuotaClasses(module: Record<string, string>, source: string): QuotaClassMap {

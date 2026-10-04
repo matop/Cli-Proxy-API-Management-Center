@@ -1307,6 +1307,8 @@
     "percent_left": "{{percent}}% left",
     "percent_left_aria": "{{percent}} percent of quota left",
     "percent_left_low_aria": "Low quota: {{percent}} percent left",
+    "percent_exhausted": "Exhausted",
+    "percent_exhausted_aria": "Quota exhausted: 0 percent left, blocked until reset",
     "use_first_badge": "Use first · {{percent}}% left, lost {{relative}}",
     "use_first_hint": "This account's tightest account-wide limit resets before any other account's. Model-specific limits don't count. Unused quota is lost at reset.",
     "updated_relative": "Updated {{relative}}",

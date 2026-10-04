@@ -97,6 +97,20 @@
   }
 }
 
+/* 0% left: blocked until reset. Failure chip with a blocked icon and the text
+   "Exhausted", so it differs from the low chip in shape and words. */
+.quotaPercentEmpty {
+  padding: 0 6px;
+  border: 1px solid var(--status-bad-border);
+  border-radius: $radius-sm;
+  background-color: var(--status-bad-bg);
+  color: var(--status-bad-text);
+
+  &::before {
+    @include status-icon($icon-blocked, 12px);
+  }
+}
+
 /* Window that resets soonest with quota left (quotaPriority.ts). */
 .quotaUseFirst {
   align-self: flex-start;
@@ -142,6 +156,10 @@
   border-radius: $radius-full;
   background: color-mix(in srgb, var(--text-primary) 11%, transparent);
   overflow: hidden;
+}
+
+.quotaBarEmpty {
+  background: color-mix(in srgb, var(--viz-failure) 16%, transparent);
 }
 
 .quotaBarFill {
