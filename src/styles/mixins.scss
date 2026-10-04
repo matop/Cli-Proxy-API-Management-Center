@@ -48,3 +48,23 @@
     outline-offset: 2px;
   }
 }
+
+// 状态图标：在文字前放一个 currentColor 的小图标，让状态不只靠颜色区分
+@mixin status-icon($icon, $size: 0.95em) {
+  content: '';
+  display: inline-block;
+  flex-shrink: 0;
+  width: $size;
+  height: $size;
+  background-color: currentColor;
+  -webkit-mask: url($icon) center / contain no-repeat;
+  mask: url($icon) center / contain no-repeat;
+}
+
+// 统一焦点环
+@mixin focus-ring($offset: 2px) {
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: $offset;
+  }
+}

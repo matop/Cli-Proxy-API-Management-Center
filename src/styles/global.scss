@@ -17,6 +17,12 @@ body {
     color $transition-normal;
 }
 
+// Baseline keyboard focus ring; components with their own ring override it.
+:where(a, button, [role='button'], [tabindex], summary, input, select, textarea):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 html.modal-open,
 body.modal-open {
   overflow: hidden;
@@ -44,4 +50,3 @@ body.modal-open .content {
     background: var(--border-hover);
   }
 }
-

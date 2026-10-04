@@ -15,8 +15,8 @@
   --floating-shadow: 0 12px 26px rgba(0, 0, 0, 0.14);
 
   --text-primary: #2d2a26;
-  --text-secondary: #6d6760;
-  --text-tertiary: #a29c95;
+  --text-secondary: #5c564f; // 6.2:1 on --bg-primary
+  --text-tertiary: #6e6861; // 4.7:1 on --bg-primary (AA body text)
   --text-quaternary: #c0bab3;
   --text-muted: var(--text-tertiary);
 
@@ -90,6 +90,31 @@
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
   --dur-press: 160ms;
   --dur-hover: 200ms;
+
+  // Surface system shared by dashboard, quota and sidebar.
+  // Cards sit one step above the page; inset rows sit one step below the card.
+  --surface-page: var(--bg-secondary);
+  --surface-card: #fffdf9;
+  --surface-inset: #f6f4ee;
+  --surface-border: #e3e1db;
+  --surface-border-strong: #d5d2cb;
+  --surface-shadow: 0 1px 2px rgb(45 42 38 / 0.06), 0 4px 14px -6px rgb(45 42 38 / 0.08);
+  --radius-card: 14px;
+  --radius-inset: 10px;
+
+  // Status text colours: AA (>= 4.5:1) on cards in each theme.
+  // Status is never colour-only: each state also carries an icon or a word.
+  --status-good-text: #065f46;
+  --status-warn-text: #92400e;
+  --status-bad-text: #8a3a30;
+  --status-good-bg: color-mix(in srgb, var(--viz-success) 12%, transparent);
+  --status-warn-bg: color-mix(in srgb, var(--amber-color) 14%, transparent);
+  --status-bad-bg: color-mix(in srgb, var(--viz-failure) 12%, transparent);
+  --status-good-border: color-mix(in srgb, var(--viz-success) 45%, transparent);
+  --status-warn-border: color-mix(in srgb, var(--amber-color) 50%, transparent);
+  --status-bad-border: color-mix(in srgb, var(--viz-failure) 45%, transparent);
+
+  --focus-ring: #2d2a26;
 }
 
 // 纯白主题
@@ -104,8 +129,8 @@
   --floating-shadow: 0 12px 26px rgba(0, 0, 0, 0.12);
 
   --text-primary: #2d2a26;
-  --text-secondary: #6d6760;
-  --text-tertiary: #a29c95;
+  --text-secondary: #5c564f; // 6.2:1 on --bg-primary
+  --text-tertiary: #6e6861; // 4.7:1 on --bg-primary (AA body text)
   --text-quaternary: #c0bab3;
   --text-muted: var(--text-tertiary);
 
@@ -238,6 +263,21 @@
   // 因此深色单独降一档。三套主题均已通过对比度/色盲/亮度校验。
   --viz-success: #0fae78;
   --viz-failure: #cf4b3a;
+
+  --surface-card: #1d1b18;
+  --surface-inset: #181613;
+  --surface-border: #34302b;
+  --surface-border-strong: #4a453f;
+  --surface-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+
+  --status-good-text: #6ee7b7;
+  --status-warn-text: #fcd34d;
+  --status-bad-text: #f1b0a6;
+  --status-good-bg: color-mix(in srgb, var(--viz-success) 16%, transparent);
+  --status-warn-bg: color-mix(in srgb, var(--amber-color) 16%, transparent);
+  --status-bad-bg: color-mix(in srgb, var(--viz-failure) 18%, transparent);
+
+  --focus-ring: #f6f4f1;
 }
 
 @media (max-width: 768px),
