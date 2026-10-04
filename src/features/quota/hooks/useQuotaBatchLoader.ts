@@ -22,6 +22,7 @@ import { getQuotaCacheKey } from '@/utils/quota/identity';
 import type { QuotaFileEntry } from '../logic';
 import { QUOTA_ADAPTERS, getQuotaMap, getQuotaSetter, type QuotaCardState } from '../providers';
 import type { QuotaProviderType } from '../providers/types';
+import type { QuotaCacheStorage } from '@/services/storage/quotaCacheStorage';
 import {
   fetchQuotaShared,
   persistQuotaSuccess,
@@ -46,9 +47,13 @@ export interface LoadQuotaOptions {
 
 /**
  * Restore persisted, still-fresh quota into the store for targets with nothing
- * loaded. No network. Returns how many were restored.
+ * loaded. No network. Returns how many were restored. Storage and API base
+ * default to sessionStorage and the connected base; tests pass their own.
  */
-export function restoreQuotaFromSession(targets: readonly QuotaFileEntry[]): number {
+export function restoreQuotaFromSession(
+  targets: readonly QuotaFileEntry[],
+  source: { storage?: QuotaCacheStorage | null; apiBase?: string } = {}
+): number {
   return restorePersistedQuota(
     targets,
     (type, cacheKey) => getQuotaMap(QUOTA_ADAPTERS[type])[cacheKey],
@@ -57,7 +62,9 @@ export function restoreQuotaFromSession(targets: readonly QuotaFileEntry[]): num
         ...prev,
         [cacheKey]: state as unknown as QuotaCardState,
       })),
-    Date.now()
+    Date.now(),
+    source.storage,
+    source.apiBase
   );
 }
 
