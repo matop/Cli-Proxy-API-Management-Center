@@ -27,6 +27,9 @@ interface AccountsPanelProps {
   error: string | null;
   /** Reloads the credential list; the dashboard passes its header refresh. */
   onRetry: () => Promise<void> | void;
+  /** Fetches quota for every account; nothing is fetched without it. */
+  onRefreshQuota: () => Promise<void> | void;
+  refreshingQuota: boolean;
   resolvedTheme: ResolvedTheme;
 }
 
@@ -35,6 +38,8 @@ export function AccountsPanel({
   loading,
   error,
   onRetry,
+  onRefreshQuota,
+  refreshingQuota,
   resolvedTheme,
 }: AccountsPanelProps) {
   const { t, i18n } = useTranslation();
@@ -99,9 +104,20 @@ export function AccountsPanel({
           {t('dashboard.accounts_title')}
         </h2>
         <span className={styles.hint}>{t('dashboard.accounts_hint')}</span>
-        <Link to="/quota" className={styles.headLink}>
-          {t('dashboard.accounts_open_quota')}
-        </Link>
+        <div className={styles.headActions}>
+          <button
+            type="button"
+            className={styles.refreshButton}
+            onClick={() => void onRefreshQuota()}
+            disabled={refreshingQuota || loading || accounts.length === 0}
+            aria-busy={refreshingQuota}
+          >
+            {t(refreshingQuota ? 'common.loading' : 'dashboard.accounts_refresh_quota')}
+          </button>
+          <Link to="/quota" className={styles.headLink}>
+            {t('dashboard.accounts_open_quota')}
+          </Link>
+        </div>
       </header>
 
       {error !== null && accounts.length === 0 ? (

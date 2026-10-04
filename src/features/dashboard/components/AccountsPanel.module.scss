@@ -424,3 +424,38 @@
     transition: none;
   }
 }
+
+.headActions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.headActions > .headLink {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.refreshButton {
+  @extend .headLink;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+
+  &::after {
+    content: none;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refreshButton {
+    transition: none;
+  }
+}

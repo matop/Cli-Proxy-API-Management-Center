@@ -47,7 +47,7 @@ export function DashboardPage() {
     refresh,
   } = useDashboardOverview();
 
-  const { accounts } = useDashboardQuota(authFiles, connected);
+  const { accounts, refreshQuota, refreshingQuota } = useDashboardQuota(authFiles, connected);
 
   useHeaderRefresh(refresh, connected);
 
@@ -150,6 +150,8 @@ export function DashboardPage() {
           loading={connected && authFiles === null && authFilesError === null}
           error={authFilesError}
           onRetry={refresh}
+          onRefreshQuota={refreshQuota}
+          refreshingQuota={refreshingQuota}
           resolvedTheme={resolvedTheme}
         />
       </section>
