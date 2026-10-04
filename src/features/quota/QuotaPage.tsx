@@ -28,6 +28,7 @@ import { QuotaCard } from './components/QuotaCard';
 import { QuotaTimeline } from './components/QuotaTimeline';
 import {
   CARD_ENTRANCE_BUDGET_MS,
+  DEFAULT_QUOTA_SORT_MODE,
   QUOTA_PAGE_SIZE,
   QUOTA_SORT_MODES,
   QUOTA_TAB_ORDER,
@@ -42,8 +43,10 @@ import {
   filterEntriesBySearch,
   paginate,
   sortQuotaEntries,
+  visibleQuotaTabIds,
   type QuotaFileEntry,
 } from './logic';
+import { priorityResetMs } from './quotaPriority';
 import { nextRecoveryMs } from './resetSchedule';
 import { QUOTA_ADAPTERS, getQuotaSetter, type QuotaCardState } from './providers';
 import type { QuotaProviderType } from './providers/types';
@@ -53,7 +56,6 @@ import { useQuotaBatchLoader } from './hooks/useQuotaBatchLoader';
 import { readQuotaUiState, writeQuotaUiState } from './uiState';
 import styles from './QuotaPage.module.scss';
 
-const TAB_IDS: string[] = ['all', ...QUOTA_TAB_ORDER];
 const SKELETON_CARD_COUNT = 6;
 
 /**
@@ -72,7 +74,7 @@ export function QuotaPage() {
   const [error, setError] = useState('');
   const [tab, setTab] = useState<QuotaTabId>(() => readQuotaUiState()?.tab ?? 'all');
   const [sortMode, setSortMode] = useState<QuotaSortMode>(
-    () => readQuotaUiState()?.sortMode ?? 'default'
+    () => readQuotaUiState()?.sortMode ?? DEFAULT_QUOTA_SORT_MODE
   );
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -163,6 +165,7 @@ export function QuotaPage() {
 
   const entries = useMemo(() => classifyQuotaFiles(files), [files]);
   const tabCounts = useMemo(() => buildTabCounts(entries), [entries]);
+  const tabIds = useMemo(() => visibleQuotaTabIds(tabCounts, tab), [tabCounts, tab]);
   const filteredEntries = useMemo(
     () => filterEntriesBySearch(filterEntriesByTab(entries, tab), search),
     [entries, tab, search]
@@ -172,14 +175,17 @@ export function QuotaPage() {
     setPage(1);
   }, []);
 
-  const resolveNextRecovery = useCallback(
-    (entry: QuotaFileEntry) => nextRecoveryMs(entry.type, getQuota(entry), sortNow),
-    [getQuota, sortNow]
+  const resolveSortInstant = useCallback(
+    (entry: QuotaFileEntry) =>
+      sortMode === 'priority'
+        ? priorityResetMs(entry.type, getQuota(entry), sortNow)
+        : nextRecoveryMs(entry.type, getQuota(entry), sortNow),
+    [getQuota, sortMode, sortNow]
   );
   // 排序在分页之前：否则「最快恢复」只在当前页内成立。
   const sortedEntries = useMemo(
-    () => sortQuotaEntries(filteredEntries, sortMode, resolveNextRecovery),
-    [filteredEntries, sortMode, resolveNextRecovery]
+    () => sortQuotaEntries(filteredEntries, sortMode, resolveSortInstant),
+    [filteredEntries, sortMode, resolveSortInstant]
   );
 
   const { pageItems, currentPage, totalPages } = useMemo(
@@ -327,7 +333,7 @@ export function QuotaPage() {
         {/* 提供商导航与搜索工具栏分层，避免不同控件争夺视觉焦点。 */}
         <div className={styles.tabsRow} data-reveal>
           <ProviderTabs
-            types={TAB_IDS}
+            types={tabIds}
             counts={tabCounts}
             active={tab}
             resolvedTheme={resolvedTheme}

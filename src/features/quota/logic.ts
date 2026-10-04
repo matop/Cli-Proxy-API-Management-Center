@@ -13,6 +13,7 @@ import { META_CONFIG } from './providers/meta/data';
 import { XAI_CONFIG } from './providers/xai/data';
 import type { QuotaProviderType } from './providers/types';
 import { QUOTA_TAB_ORDER, type QuotaSortMode, type QuotaTabId } from './constants';
+import { sortByInstant } from './quotaPriority';
 
 const QUOTA_FILTER_MAP: Record<QuotaProviderType, (file: AuthFileItem) => boolean> = {
   antigravity: ANTIGRAVITY_CONFIG.filterFn,
@@ -78,7 +79,11 @@ export function filterEntriesBySearch(entries: QuotaFileEntry[], search: string)
 }
 
 /**
- * Order the grid by whichever credential recovers first.
+ * Order the grid by an instant per credential.
+ *
+ * 'soonest' passes the next recovery instant; 'priority' passes the reset of
+ * the window to use first (see quotaPriority.ts). 'default' keeps the
+ * provider-grouped order and ignores the resolver.
  *
  * The instant is injected rather than read here: quota lives in the store and
  * arrives asynchronously, and keeping this function store-free is what makes
@@ -86,7 +91,7 @@ export function filterEntriesBySearch(entries: QuotaFileEntry[], search: string)
  *
  * Credentials with no instant — not loaded yet, failed, or reporting no
  * upcoming reset — sink to the bottom rather than sorting as "now". They keep
- * their incoming provider-grouped order, so the unloaded tail still reads like
+ * their incoming provider-grouped order, so  the unloaded tail still reads like
  * the default view instead of an arbitrary shuffle. Because loading is
  * click-to-fetch, that tail is most of the list until the user asks for data.
  *
@@ -96,20 +101,10 @@ export function filterEntriesBySearch(entries: QuotaFileEntry[], search: string)
 export function sortQuotaEntries(
   entries: QuotaFileEntry[],
   mode: QuotaSortMode,
-  resolveNextRecoveryMs: (entry: QuotaFileEntry) => number | null
+  resolveInstantMs: (entry: QuotaFileEntry) => number | null
 ): QuotaFileEntry[] {
-  if (mode !== 'soonest') return [...entries];
-
-  // Decorate once — resolving pokes at provider-shaped state per entry.
-  return entries
-    .map((entry, index) => ({ entry, index, atMs: resolveNextRecoveryMs(entry) }))
-    .sort((a, b) => {
-      if (a.atMs === null && b.atMs === null) return a.index - b.index;
-      if (a.atMs === null) return 1;
-      if (b.atMs === null) return -1;
-      return a.atMs - b.atMs || a.index - b.index;
-    })
-    .map((decorated) => decorated.entry);
+  if (mode === 'default') return [...entries];
+  return sortByInstant(entries, resolveInstantMs);
 }
 
 export function buildTabCounts(entries: QuotaFileEntry[]): Record<string, number> {
@@ -121,6 +116,18 @@ export function buildTabCounts(entries: QuotaFileEntry[]): Record<string, number
     counts[entry.type] += 1;
   }
   return counts;
+}
+
+/**
+ * Provider tabs worth showing: 'all', every provider with at least one
+ * credential, and the active tab even when empty (a stored or URL-selected tab
+ * must not vanish under the user). Order follows QUOTA_TAB_ORDER.
+ */
+export function visibleQuotaTabIds(
+  counts: Record<string, number>,
+  active: QuotaTabId
+): QuotaTabId[] {
+  return ['all', ...QUOTA_TAB_ORDER.filter((type) => type === active || (counts[type] ?? 0) > 0)];
 }
 
 export const isQuotaRefreshDisabled = (
