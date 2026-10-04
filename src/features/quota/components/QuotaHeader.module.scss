@@ -33,11 +33,9 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: 4px 8px;
-  font-family: $font-mono;
-  font-size: 13px;
+  font-size: $text-base;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
   color: var(--text-secondary);
 
   /* 终端游标：结构记号，与凭证库 meta 行同语汇 */
@@ -52,7 +50,7 @@
 }
 
 .metaDot {
-  color: var(--text-quaternary);
+  color: var(--text-tertiary);
   user-select: none;
 }
 
@@ -61,7 +59,7 @@
 }
 
 .metaLoaded {
-  color: var(--viz-success);
+  color: var(--status-good-text);
 }
 
 .metaMuted {
@@ -69,7 +67,7 @@
 }
 
 .metaAttention {
-  color: var(--viz-failure);
+  color: var(--status-bad-text);
 }
 
 /* ---------- 动作区 ---------- */
@@ -110,7 +108,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 }

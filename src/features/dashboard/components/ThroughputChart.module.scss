@@ -1,7 +1,7 @@
 @use '../../../styles/mixins' as *;
 
 .chart {
-  --chart-height: 208px;
+  --chart-height: 176px;
   --bar-max-width: 24px;
 
   margin: 0;
@@ -16,7 +16,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-lg;
-  font-size: 13px;
+  font-size: $text-sm;
   color: var(--text-secondary);
 }
 
@@ -94,7 +94,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: var(--border-color);
+  background: color-mix(in srgb, var(--border-color) 60%, transparent);
 
   &:last-child {
     background: var(--border-primary);

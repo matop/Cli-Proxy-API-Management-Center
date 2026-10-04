@@ -120,13 +120,14 @@ export function AccountsPanel({ accounts, loading, resolvedTheme }: AccountsPane
                       }
                     >
                       {iconSrc ? (
-                        <img src={iconSrc} alt={typeLabel} className={styles.icon} />
+                        <img src={iconSrc} alt="" className={styles.icon} />
                       ) : (
-                        <span className={styles.iconFallback}>
+                        <span className={styles.iconFallback} aria-hidden="true">
                           {typeLabel.slice(0, 1).toUpperCase()}
                         </span>
                       )}
                     </span>
+                    <span className={styles.provider}>{typeLabel}</span>
                     <span className={styles.name} title={file.name}>
                       {shortAccountName(file)}
                     </span>
