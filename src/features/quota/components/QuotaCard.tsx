@@ -11,8 +11,7 @@ import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from '@/components/ui/icons';
 import type { ResolvedTheme } from '@/types';
-import { useNow } from '@/hooks/useNow';
-import { formatRelativeInstant, resolveQuotaErrorMessage } from '@/utils/quota';
+import { resolveQuotaErrorMessage } from '@/utils/quota';
 import { getQuotaDisplayName } from '@/utils/quota/identity';
 import {
   getAuthFileIcon,
@@ -23,8 +22,8 @@ import {
 import { bindQuotaClasses } from '../types';
 import { QUOTA_ADAPTERS, type QuotaCardState } from '../providers';
 import { isQuotaRefreshDisabled, type QuotaFileEntry } from '../logic';
-import { updatedAgoInstant } from '../quotaCache';
 import type { QuotaPriorityWindow } from '../quotaPriority';
+import { QuotaUpdatedHint } from './QuotaUpdatedHint';
 import bodyStyles from './QuotaBody.module.scss';
 import styles from './QuotaCard.module.scss';
 
@@ -57,8 +56,7 @@ export function QuotaCard(props: QuotaCardProps) {
     onRefresh,
     onReset,
   } = props;
-  const { t, i18n } = useTranslation();
-  const now = useNow();
+  const { t } = useTranslation();
   const adapter = QUOTA_ADAPTERS[entry.type];
   const file = entry.file;
   const displayName = getQuotaDisplayName(file);
@@ -147,15 +145,7 @@ export function QuotaCard(props: QuotaCardProps) {
       {status !== 'idle' && (
         <footer className={styles.actionRow}>
           {fetchedAtMs !== undefined && (
-            <span className={styles.idleHint}>
-              {t('quota_management.updated_relative', {
-                relative: formatRelativeInstant(
-                  updatedAgoInstant(fetchedAtMs, now),
-                  now,
-                  i18n.resolvedLanguage
-                ),
-              })}
-            </span>
+            <QuotaUpdatedHint fetchedAtMs={fetchedAtMs} className={styles.idleHint} />
           )}
           {showReset && (
             <button

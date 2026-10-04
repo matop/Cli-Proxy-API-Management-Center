@@ -62,7 +62,15 @@ button.quotaMessageAction {
 .quotaCardActions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 6px;
+}
+
+/* "Updated X ago": left of the actions, which stay right-aligned. */
+.quotaUpdated {
+  margin-right: auto;
+  font-size: $quota-font-size;
+  color: var(--text-tertiary);
 }
 
 .quotaResetCreditButton {

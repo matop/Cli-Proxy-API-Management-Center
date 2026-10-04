@@ -3,11 +3,13 @@ import type { DevinQuotaState } from '@/types';
 import { useNow } from '@/hooks/useNow';
 import { buildResetDisplay } from '@/utils/quota';
 import { QuotaMeter } from '../../components/QuotaMeter';
+import { QuotaPercentLabel } from '../../components/QuotaPercentLabel';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
+import { QuotaUseFirstBadge } from '../../components/QuotaUseFirstBadge';
 import { collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
 import type { QuotaBodyProps } from '../../types';
 
-export function DevinQuotaBody({ quota, classes }: QuotaBodyProps<DevinQuotaState>) {
+export function DevinQuotaBody({ quota, classes, useFirst }: QuotaBodyProps<DevinQuotaState>) {
   const { t, i18n } = useTranslation();
   const now = useNow();
   const locale = i18n.resolvedLanguage;
@@ -41,11 +43,15 @@ export function DevinQuotaBody({ quota, classes }: QuotaBodyProps<DevinQuotaStat
             <div className={classes.quotaRowHeader}>
               <span className={classes.quotaModel}>{label}</span>
               <div className={classes.quotaMeta}>
-                <span className={classes.quotaPercent}>
-                  {window.remainingPercent === null
-                    ? t('devin_quota.unavailable')
-                    : `${window.remainingPercent}%`}
-                </span>
+                {window.remainingPercent === null ? (
+                  <span className={classes.quotaPercent}>{t('devin_quota.unavailable')}</span>
+                ) : (
+                  <QuotaPercentLabel
+                    remaining={window.remainingPercent}
+                    classes={classes}
+                    fractionDigits={1}
+                  />
+                )}
                 {reset ? (
                   <QuotaResetLabel display={reset} classes={classes} soon={soon} />
                 ) : (
@@ -62,6 +68,14 @@ export function DevinQuotaBody({ quota, classes }: QuotaBodyProps<DevinQuotaStat
             >
               <QuotaMeter percent={window.remainingPercent} classes={classes} index={index} />
             </div>
+            {useFirst?.rowId === window.id && useFirst.resetAtMs !== null && (
+              <QuotaUseFirstBadge
+                resetAtMs={useFirst.resetAtMs}
+                remainingPercent={useFirst.remainingPercent}
+                nowMs={now}
+                classes={classes}
+              />
+            )}
           </div>
         );
       })}

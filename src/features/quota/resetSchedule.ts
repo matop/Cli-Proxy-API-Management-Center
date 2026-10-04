@@ -209,7 +209,7 @@ export function pickUrgentRowId(
 
 /**
  * Soonest upcoming recovery instant for a whole credential — the sort key for
- * "soonest recovery first". Null when nothing is loaded or nothing is pending.
+ * "Next reset (any limit)". Null when nothing is loaded or nothing is pending.
  */
 export function nextRecoveryMs(
   provider: QuotaProviderType,

@@ -4,17 +4,19 @@
  * generation-guarded commit、成功/失败通知），仅把 config 换成 adapter。
  *
  * An explicit refresh ignores the quota cache TTL but still joins a fetch for
- * the same credential that is already in flight (fetchQuotaShared).
+ * the same credential that is already in flight (fetchQuotaShared). The Quota
+ * page cards and the Auth Files quota section both refresh through here.
  */
 
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   captureQuotaCacheGeneration,
   commitIfQuotaCacheCurrent,
   useNotificationStore,
 } from '@/stores';
-import type { AuthFileItem } from '@/types';
+import type { AuthFileItem, NotificationType } from '@/types';
 import { getStatusFromError } from '@/utils/quota';
 import { getQuotaCacheKey } from '@/utils/quota/identity';
 import { getQuotaMap, getQuotaSetter, type QuotaAdapter, type QuotaCardState } from '../providers';
@@ -22,6 +24,53 @@ import { fetchQuotaShared, persistQuotaSuccess } from '../quotaCache';
 
 const getQuotaState = (adapter: QuotaAdapter, file: AuthFileItem): QuotaCardState | undefined =>
   getQuotaMap(adapter)[getQuotaCacheKey(file)];
+
+/**
+ * Explicit refresh of one credential: ignores the TTL, joins a fetch already in
+ * flight for it, stamps `fetchedAtMs`, persists the success, and notifies.
+ * Does nothing while the credential is already loading.
+ */
+export async function refreshQuotaEntry(
+  file: AuthFileItem,
+  adapter: QuotaAdapter,
+  t: TFunction,
+  notify: (message: string, type: NotificationType) => void
+): Promise<void> {
+  if (getQuotaState(adapter, file)?.status === 'loading') return;
+  const cacheKey = getQuotaCacheKey(file);
+  const cacheGeneration = captureQuotaCacheGeneration(file.name);
+  const setQuota = getQuotaSetter(adapter);
+
+  setQuota((prev) => ({
+    ...prev,
+    [cacheKey]: adapter.buildLoadingState(),
+  }));
+
+  try {
+    const { data, fetchedAtMs } = await fetchQuotaShared(adapter.type, file, () =>
+      adapter.fetchQuota(file, t)
+    );
+    commitIfQuotaCacheCurrent(cacheGeneration, () => {
+      const state = { ...adapter.buildSuccessState(data), fetchedAtMs };
+      setQuota((prev) => ({
+        ...prev,
+        [cacheKey]: state,
+      }));
+      persistQuotaSuccess(adapter.type, cacheKey, state);
+      notify(t('auth_files.quota_refresh_success', { name: file.name }), 'success');
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : t('common.unknown_error');
+    const status = getStatusFromError(err);
+    commitIfQuotaCacheCurrent(cacheGeneration, () => {
+      setQuota((prev) => ({
+        ...prev,
+        [cacheKey]: adapter.buildErrorState(message, status),
+      }));
+      notify(t('auth_files.quota_refresh_failed', { name: file.name, message }), 'error');
+    });
+  }
+}
 
 export function useQuotaActions(disableControls: boolean) {
   const { t } = useTranslation();
@@ -32,44 +81,8 @@ export function useQuotaActions(disableControls: boolean) {
   const refreshQuota = useCallback(
     async (file: AuthFileItem, adapter: QuotaAdapter) => {
       if (disableControls || file.disabled) return;
-      const cacheKey = getQuotaCacheKey(file);
-      if (resettingQuotaName === cacheKey) return;
-      if (getQuotaState(adapter, file)?.status === 'loading') return;
-      const cacheGeneration = captureQuotaCacheGeneration(file.name);
-      const setQuota = getQuotaSetter(adapter);
-
-      setQuota((prev) => ({
-        ...prev,
-        [cacheKey]: adapter.buildLoadingState(),
-      }));
-
-      try {
-        const { data, fetchedAtMs } = await fetchQuotaShared(adapter.type, file, () =>
-          adapter.fetchQuota(file, t)
-        );
-        commitIfQuotaCacheCurrent(cacheGeneration, () => {
-          const state = { ...adapter.buildSuccessState(data), fetchedAtMs };
-          setQuota((prev) => ({
-            ...prev,
-            [cacheKey]: state,
-          }));
-          persistQuotaSuccess(adapter.type, cacheKey, state);
-          showNotification(t('auth_files.quota_refresh_success', { name: file.name }), 'success');
-        });
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : t('common.unknown_error');
-        const status = getStatusFromError(err);
-        commitIfQuotaCacheCurrent(cacheGeneration, () => {
-          setQuota((prev) => ({
-            ...prev,
-            [cacheKey]: adapter.buildErrorState(message, status),
-          }));
-          showNotification(
-            t('auth_files.quota_refresh_failed', { name: file.name, message }),
-            'error'
-          );
-        });
-      }
+      if (resettingQuotaName === getQuotaCacheKey(file)) return;
+      await refreshQuotaEntry(file, adapter, t, showNotification);
     },
     [disableControls, resettingQuotaName, showNotification, t]
   );

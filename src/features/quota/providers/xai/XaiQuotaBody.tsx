@@ -9,7 +9,9 @@ import type { XaiBillingSummary, XaiQuotaState } from '@/types';
 import { buildResetDisplay, formatQuotaResetTime, parseIsoToMs } from '@/utils/quota';
 import { useNow } from '@/hooks/useNow';
 import { QuotaMeter } from '../../components/QuotaMeter';
+import { QuotaPercentLabel } from '../../components/QuotaPercentLabel';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
+import { QuotaUseFirstBadge } from '../../components/QuotaUseFirstBadge';
 import { XAI_WEEKLY_ROW_ID, collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
 import type { QuotaBodyProps } from '../../types';
 
@@ -63,7 +65,7 @@ const resolveXaiPlan = (
   return null;
 };
 
-export function XaiQuotaBody({ quota, classes }: QuotaBodyProps<XaiQuotaState>) {
+export function XaiQuotaBody({ quota, classes, useFirst }: QuotaBodyProps<XaiQuotaState>) {
   const { t, i18n } = useTranslation();
   // Ahead of the early return below — hooks cannot be conditional.
   const now = useNow();
@@ -95,7 +97,6 @@ export function XaiQuotaBody({ quota, classes }: QuotaBodyProps<XaiQuotaState>) 
   const clampedUsed =
     billing.usedPercent === null ? null : Math.max(0, Math.min(100, billing.usedPercent));
   const remaining = clampedUsed === null ? null : Math.max(0, Math.min(100, 100 - clampedUsed));
-  const percentLabel = formatXaiPercent(remaining);
   const amountLabel = formatXaiRemainingAmount(billing);
   const resetLabel = formatQuotaResetTime(billing.billingPeriodEnd);
   // The monthly row is a billing cycle, so it carries no resetAtMs (that field
@@ -169,6 +170,15 @@ export function XaiQuotaBody({ quota, classes }: QuotaBodyProps<XaiQuotaState>) 
           {weeklyRemaining !== null && (
             <QuotaMeter percent={weeklyRemaining} classes={classes} index={0} />
           )}
+          {/* Only the weekly window ranks (quotaPriority); monthly billing never binds. */}
+          {useFirst?.rowId === XAI_WEEKLY_ROW_ID && useFirst.resetAtMs !== null && (
+            <QuotaUseFirstBadge
+              resetAtMs={useFirst.resetAtMs}
+              remainingPercent={useFirst.remainingPercent}
+              nowMs={now}
+              classes={classes}
+            />
+          )}
         </div>
       )}
       {billing.productUsage.map((item, index) => {
@@ -219,7 +229,7 @@ export function XaiQuotaBody({ quota, classes }: QuotaBodyProps<XaiQuotaState>) 
           <div className={classes.quotaRowHeader}>
             <span className={classes.quotaModel}>{t('xai_quota.monthly_credits')}</span>
             <div className={classes.quotaMeta}>
-              <span className={classes.quotaPercent}>{percentLabel}</span>
+              <QuotaPercentLabel remaining={remaining} classes={classes} />
               <span className={classes.quotaAmount}>{amountLabel}</span>
               {monthlyResetDisplay && (
                 <QuotaResetLabel display={monthlyResetDisplay} classes={classes} />
