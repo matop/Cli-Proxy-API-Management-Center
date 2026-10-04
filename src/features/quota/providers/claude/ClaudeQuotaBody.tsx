@@ -8,7 +8,10 @@ import type { ClaudeQuotaState } from '@/types';
 import { buildResetDisplay } from '@/utils/quota';
 import { useNow } from '@/hooks/useNow';
 import { QuotaMeter } from '../../components/QuotaMeter';
+import { QuotaPercentLabel } from '../../components/QuotaPercentLabel';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
+import { QuotaUseFirstBadge } from '../../components/QuotaUseFirstBadge';
+import { collectQuotaPriorityWindows, pickPriorityWindow } from '../../quotaPriority';
 import { collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
 import type { QuotaBodyProps } from '../../types';
 
@@ -17,6 +20,10 @@ export function ClaudeQuotaBody({ quota, classes }: QuotaBodyProps<ClaudeQuotaSt
   const now = useNow();
   const soonestRowId = useMemo(
     () => pickUrgentRowId(collectQuotaRowInstants('claude', quota), now),
+    [quota, now]
+  );
+  const useFirst = useMemo(
+    () => pickPriorityWindow(collectQuotaPriorityWindows('claude', quota), now),
     [quota, now]
   );
   const windows = quota.windows ?? [];
@@ -47,7 +54,6 @@ export function ClaudeQuotaBody({ quota, classes }: QuotaBodyProps<ClaudeQuotaSt
           const clampedUsed = used === null ? null : Math.max(0, Math.min(100, used));
           const remaining =
             clampedUsed === null ? null : Math.max(0, Math.min(100, 100 - clampedUsed));
-          const percentLabel = remaining === null ? '--' : `${Math.round(remaining)}%`;
           const windowLabel = window.labelKey ? t(window.labelKey) : window.label;
           const resetDisplay = buildResetDisplay(
             window.resetLabel,
@@ -67,13 +73,16 @@ export function ClaudeQuotaBody({ quota, classes }: QuotaBodyProps<ClaudeQuotaSt
               <div className={classes.quotaRowHeader}>
                 <span className={classes.quotaModel}>{windowLabel}</span>
                 <div className={classes.quotaMeta}>
-                  <span className={classes.quotaPercent}>{percentLabel}</span>
+                  <QuotaPercentLabel remaining={remaining} classes={classes} />
                   {resetDisplay && (
                     <QuotaResetLabel display={resetDisplay} classes={classes} soon={soon} />
                   )}
                 </div>
               </div>
               <QuotaMeter percent={remaining} classes={classes} index={index} />
+              {useFirst?.rowId === window.id && useFirst.resetAtMs !== null && (
+                <QuotaUseFirstBadge resetAtMs={useFirst.resetAtMs} nowMs={now} classes={classes} />
+              )}
             </div>
           );
         })

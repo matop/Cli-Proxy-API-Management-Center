@@ -355,12 +355,21 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
           {periodLabel && <span className={styles.lanePeriod}>{periodLabel}</span>}
         </div>
         <div className={styles.laneLimits}>
-          {lane.limits.map((limit) => (
-            <span key={limit.label} className={styles.laneLimit}>
-              {lane.provider === 'meta' ? t(limit.label) : limit.label}{' '}
-              <b>{limit.remaining}%</b>
-            </span>
-          ))}
+          {lane.limits.map((limit) => {
+            const limitLabel = lane.provider === 'meta' ? t(limit.label) : limit.label;
+            return (
+              <span
+                key={limit.label}
+                className={styles.laneLimit}
+                aria-label={`${limitLabel}: ${t('quota_management.percent_left_aria', {
+                  percent: limit.remaining,
+                })}`}
+              >
+                {limitLabel}{' '}
+                <b>{t('quota_management.percent_left', { percent: limit.remaining })}</b>
+              </span>
+            );
+          })}
         </div>
       </div>
 
@@ -403,7 +412,9 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
                 title={`${lane.displayName}\n${formatDay(window.startMs)} ${formatTime(
                   window.startMs
                 )} → ${formatDay(window.endMs)} ${formatTime(window.endMs)}${
-                  window.remaining !== null ? `\n${window.remaining}% remaining` : ''
+                  window.remaining !== null
+                    ? `\n${t('quota_management.percent_left', { percent: window.remaining })}`
+                    : ''
                 }`}
               >
                 {/* Only the API-reported current window has meaningful usage;
@@ -416,7 +427,9 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
                 )}
                 {showLabel && (
                   <span className={styles.windowLabel}>
-                    {window.remaining !== null ? `${window.remaining}% · ` : ''}
+                    {window.remaining !== null
+                      ? `${t('quota_management.percent_left', { percent: window.remaining })} · `
+                      : ''}
                     {endText}
                   </span>
                 )}

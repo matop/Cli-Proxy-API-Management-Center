@@ -46,6 +46,12 @@ export interface QuotaClassMap {
   quotaBarFillHigh: string;
   quotaBarFillMedium: string;
   quotaBarFillLow: string;
+  /**
+   * Optional host opt-ins. A host without them renders the plain percent and no
+   * use-first badge, so the compact auth-file host is unaffected.
+   */
+  quotaPercentLow?: string;
+  quotaUseFirst?: string;
 }
 
 export const QUOTA_CLASS_KEYS: readonly (keyof QuotaClassMap)[] = [
@@ -83,6 +89,9 @@ export const QUOTA_CLASS_KEYS: readonly (keyof QuotaClassMap)[] = [
   'quotaBarFillLow',
 ];
 
+/** Copied when the host stylesheet defines them; never required. */
+export const QUOTA_OPTIONAL_CLASS_KEYS = ['quotaPercentLow', 'quotaUseFirst'] as const;
+
 /** 宿主 CSS Module → 类型化契约。缺键即抛（fail-loud），`source` 用于报错定位。 */
 export function bindQuotaClasses(module: Record<string, string>, source: string): QuotaClassMap {
   const missing = QUOTA_CLASS_KEYS.filter((key) => !module[key]);
@@ -92,6 +101,9 @@ export function bindQuotaClasses(module: Record<string, string>, source: string)
   const bound = {} as Record<keyof QuotaClassMap, string>;
   for (const key of QUOTA_CLASS_KEYS) {
     bound[key] = module[key];
+  }
+  for (const key of QUOTA_OPTIONAL_CLASS_KEYS) {
+    if (module[key]) bound[key] = module[key];
   }
   return bound;
 }

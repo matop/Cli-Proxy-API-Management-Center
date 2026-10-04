@@ -8,7 +8,10 @@ import type { KimiQuotaState } from '@/types';
 import { buildResetDisplay, formatKimiResetHint } from '@/utils/quota';
 import { useNow } from '@/hooks/useNow';
 import { QuotaMeter } from '../../components/QuotaMeter';
+import { QuotaPercentLabel } from '../../components/QuotaPercentLabel';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
+import { QuotaUseFirstBadge } from '../../components/QuotaUseFirstBadge';
+import { collectQuotaPriorityWindows, pickPriorityWindow } from '../../quotaPriority';
 import { collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
 import type { QuotaBodyProps } from '../../types';
 
@@ -18,6 +21,10 @@ export function KimiQuotaBody({ quota, classes }: QuotaBodyProps<KimiQuotaState>
   const now = useNow();
   const soonestRowId = useMemo(
     () => pickUrgentRowId(collectQuotaRowInstants('kimi', quota), now),
+    [quota, now]
+  );
+  const useFirst = useMemo(
+    () => pickPriorityWindow(collectQuotaPriorityWindows('kimi', quota), now),
     [quota, now]
   );
   const rows = quota.rows ?? [];
@@ -37,7 +44,6 @@ export function KimiQuotaBody({ quota, classes }: QuotaBodyProps<KimiQuotaState>
             : used > 0
               ? 0
               : null;
-        const percentLabel = remaining === null ? '--' : `${remaining}%`;
         const rowLabel = row.labelKey
           ? t(row.labelKey, (row.labelParams ?? {}) as Record<string, string | number>)
           : (row.label ?? '');
@@ -58,13 +64,16 @@ export function KimiQuotaBody({ quota, classes }: QuotaBodyProps<KimiQuotaState>
             <div className={classes.quotaRowHeader}>
               <span className={classes.quotaModel}>{rowLabel}</span>
               <div className={classes.quotaMeta}>
-                <span className={classes.quotaPercent}>{percentLabel}</span>
+                <QuotaPercentLabel remaining={remaining} classes={classes} />
                 {resetDisplay && (
                   <QuotaResetLabel display={resetDisplay} classes={classes} soon={soon} />
                 )}
               </div>
             </div>
             <QuotaMeter percent={remaining} classes={classes} index={index} />
+            {useFirst?.rowId === row.id && useFirst.resetAtMs !== null && (
+              <QuotaUseFirstBadge resetAtMs={useFirst.resetAtMs} nowMs={now} classes={classes} />
+            )}
           </div>
         );
       })}
