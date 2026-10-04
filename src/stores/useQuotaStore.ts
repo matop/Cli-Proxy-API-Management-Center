@@ -1,8 +1,17 @@
 /**
  * Quota cache that survives route switches.
+ *
+ * Successful results are also persisted per API base in sessionStorage (see
+ * features/quota/quotaCache.ts). A file-scoped clear drops those entries too; a
+ * full clear (login, reconnect) leaves them, because they are keyed by API base
+ * and still describe the same backend. Logout removes them all.
  */
 
 import { create } from 'zustand';
+import {
+  getQuotaCacheStorage,
+  removePersistedQuotaFiles,
+} from '@/services/storage/quotaCacheStorage';
 import { getQuotaCacheFileName } from '@/utils/quota/identity';
 import type {
   AntigravityQuotaState,
@@ -79,7 +88,8 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
     set((state) => ({
       xaiQuota: resolveUpdater(updater, state.xaiQuota),
     })),
-  clearQuotaCache: (names) =>
+  clearQuotaCache: (names) => {
+    if (names && names.length > 0) removePersistedQuotaFiles(getQuotaCacheStorage(), names);
     set((state) => {
       if (names) {
         if (names.length === 0) return state;
@@ -119,7 +129,8 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
         metaQuota: {},
         xaiQuota: {},
       };
-    }),
+    });
+  },
 }));
 
 export const captureQuotaCacheGeneration = (name?: string) => {

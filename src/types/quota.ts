@@ -168,6 +168,8 @@ export interface ClaudeQuotaWindow {
 
 export interface ClaudeQuotaState {
   status: 'idle' | 'loading' | 'success' | 'error';
+  /** Epoch ms when a successful result was fetched; drives the quota cache TTL. */
+  fetchedAtMs?: number;
   windows: ClaudeQuotaWindow[];
   extraUsage?: ClaudeExtraUsage | null;
   planType?: string | null;
@@ -212,6 +214,8 @@ export interface AntigravityQuotaBucket {
 
 export interface AntigravityQuotaState {
   status: 'idle' | 'loading' | 'success' | 'error';
+  /** Epoch ms when a successful result was fetched; drives the quota cache TTL. */
+  fetchedAtMs?: number;
   groups: AntigravityQuotaGroup[];
   subscription?: AntigravityQuotaSubscription | null;
   serverTimeOffsetMs?: number | null;
@@ -234,6 +238,8 @@ export interface CodexQuotaWindow {
 
 export interface CodexQuotaState {
   status: 'idle' | 'loading' | 'success' | 'error';
+  /** Epoch ms when a successful result was fetched; drives the quota cache TTL. */
+  fetchedAtMs?: number;
   windows: CodexQuotaWindow[];
   planType?: string | null;
   subscriptionActiveUntil?: string | number | null;
@@ -264,6 +270,8 @@ export interface DevinQuotaData {
 
 export interface DevinQuotaState extends DevinQuotaData {
   status: 'idle' | 'loading' | 'success' | 'error';
+  /** Epoch ms when a successful result was fetched; drives the quota cache TTL. */
+  fetchedAtMs?: number;
   error?: string;
   errorStatus?: number;
 }
@@ -286,6 +294,8 @@ export interface MetaQuotaData {
 
 export interface MetaQuotaState {
   status: 'idle' | 'loading' | 'success' | 'error';
+  /** Epoch ms when a successful result was fetched; drives the quota cache TTL. */
+  fetchedAtMs?: number;
   data?: MetaQuotaData;
   error?: string;
   errorStatus?: number;
@@ -351,6 +361,8 @@ export interface KimiQuotaRow {
 
 export interface KimiQuotaState {
   status: 'idle' | 'loading' | 'success' | 'error';
+  /** Epoch ms when a successful result was fetched; drives the quota cache TTL. */
+  fetchedAtMs?: number;
   rows: KimiQuotaRow[];
   error?: string;
   errorStatus?: number;
@@ -439,6 +451,8 @@ export interface XaiBillingSummary {
 
 export interface XaiQuotaState {
   status: 'idle' | 'loading' | 'success' | 'error';
+  /** Epoch ms when a successful result was fetched; drives the quota cache TTL. */
+  fetchedAtMs?: number;
   billing: XaiBillingSummary | null;
   error?: string;
   errorStatus?: number;

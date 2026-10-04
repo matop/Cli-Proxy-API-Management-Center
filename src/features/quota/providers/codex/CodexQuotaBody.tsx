@@ -22,7 +22,6 @@ import { QuotaMeter } from '../../components/QuotaMeter';
 import { QuotaPercentLabel } from '../../components/QuotaPercentLabel';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
 import { QuotaUseFirstBadge } from '../../components/QuotaUseFirstBadge';
-import { collectQuotaPriorityWindows, pickPriorityWindow } from '../../quotaPriority';
 import { collectQuotaRowInstants, pickUrgentRowId, resetCreditRowId } from '../../resetSchedule';
 import type { QuotaBodyProps, QuotaClassMap } from '../../types';
 
@@ -34,7 +33,7 @@ const getPlanValueClass = (planType: string | null, classes: QuotaClassMap): str
   return classes.codexPlanValue;
 };
 
-export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaState>) {
+export function CodexQuotaBody({ quota, classes, useFirst }: QuotaBodyProps<CodexQuotaState>) {
   const { t, i18n } = useTranslation();
   const now = useNow();
   const locale = i18n.resolvedLanguage;
@@ -42,10 +41,6 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
   // the final hour before the reset or expiry.
   const soonestRowId = useMemo(
     () => pickUrgentRowId(collectQuotaRowInstants('codex', quota), now),
-    [quota, now]
-  );
-  const useFirst = useMemo(
-    () => pickPriorityWindow(collectQuotaPriorityWindows('codex', quota), now),
     [quota, now]
   );
   const windows = quota.windows ?? [];
@@ -194,7 +189,12 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
               </div>
               <QuotaMeter percent={remaining} classes={classes} index={index} />
               {useFirst?.rowId === window.id && useFirst.resetAtMs !== null && (
-                <QuotaUseFirstBadge resetAtMs={useFirst.resetAtMs} nowMs={now} classes={classes} />
+                <QuotaUseFirstBadge
+                  resetAtMs={useFirst.resetAtMs}
+                  remainingPercent={useFirst.remainingPercent}
+                  nowMs={now}
+                  classes={classes}
+                />
               )}
             </div>
           );

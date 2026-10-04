@@ -11,20 +11,15 @@ import { QuotaMeter } from '../../components/QuotaMeter';
 import { QuotaPercentLabel } from '../../components/QuotaPercentLabel';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
 import { QuotaUseFirstBadge } from '../../components/QuotaUseFirstBadge';
-import { collectQuotaPriorityWindows, pickPriorityWindow } from '../../quotaPriority';
 import { collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
 import type { QuotaBodyProps } from '../../types';
 
-export function KimiQuotaBody({ quota, classes }: QuotaBodyProps<KimiQuotaState>) {
+export function KimiQuotaBody({ quota, classes, useFirst }: QuotaBodyProps<KimiQuotaState>) {
   const { t, i18n } = useTranslation();
   // Ahead of the early return below — hooks cannot be conditional.
   const now = useNow();
   const soonestRowId = useMemo(
     () => pickUrgentRowId(collectQuotaRowInstants('kimi', quota), now),
-    [quota, now]
-  );
-  const useFirst = useMemo(
-    () => pickPriorityWindow(collectQuotaPriorityWindows('kimi', quota), now),
     [quota, now]
   );
   const rows = quota.rows ?? [];
@@ -72,7 +67,12 @@ export function KimiQuotaBody({ quota, classes }: QuotaBodyProps<KimiQuotaState>
             </div>
             <QuotaMeter percent={remaining} classes={classes} index={index} />
             {useFirst?.rowId === row.id && useFirst.resetAtMs !== null && (
-              <QuotaUseFirstBadge resetAtMs={useFirst.resetAtMs} nowMs={now} classes={classes} />
+              <QuotaUseFirstBadge
+                resetAtMs={useFirst.resetAtMs}
+                remainingPercent={useFirst.remainingPercent}
+                nowMs={now}
+                classes={classes}
+              />
             )}
           </div>
         );

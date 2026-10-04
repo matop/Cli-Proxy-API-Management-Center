@@ -6,6 +6,7 @@ import { classifyQuotaFiles, resolveQuotaProviderType } from '@/features/quota/l
 import { QUOTA_ADAPTERS, type QuotaCardState } from '@/features/quota/providers';
 import type { QuotaProviderType, QuotaStore } from '@/features/quota/providers/types';
 import { useQuotaBatchLoader } from '@/features/quota/hooks/useQuotaBatchLoader';
+import { needsAutoLoad } from '@/features/quota/quotaCache';
 
 export interface DashboardAccount {
   /** Stable React key. */
@@ -25,10 +26,11 @@ const cachedStateFor = (provider: QuotaProviderType, file: AuthFileItem) =>
  * Quota for every credential on the dashboard, read from the shared
  * useQuotaStore cache that the Quota page also reads and writes.
  *
- * Only credentials with no cached state are fetched, through the Quota page's
- * own batch loader, so each credential costs at most one upstream /api-call
- * per session no matter how often the dashboard or the Quota page mounts.
- * Refreshing an account's quota stays an explicit action on /quota.
+ * Opening the dashboard is an automatic load: credentials with nothing loaded
+ * or a success older than QUOTA_CACHE_TTL_MS go to the Quota page's batch
+ * loader, which first restores fresh results persisted in sessionStorage and
+ * shares any request already in flight. Failed loads are not retried here;
+ * refreshing stays an explicit action on /quota.
  */
 export function useDashboardQuota(files: AuthFileItem[] | null, enabled: boolean) {
   const antigravityQuota = useQuotaStore((state) => state.antigravityQuota);
@@ -48,10 +50,10 @@ export function useDashboardQuota(files: AuthFileItem[] | null, enabled: boolean
     if (!enabled || quotaEntries.length === 0) return;
     // Read the store at effect time, not from render: a batch started by the
     // Quota page or an earlier mount has already written 'loading' states.
-    const missing = quotaEntries.filter((entry) => {
-      const cached = cachedStateFor(entry.type, entry.file);
-      return !cached || cached.status === 'idle';
-    });
+    const nowMs = Date.now();
+    const missing = quotaEntries.filter((entry) =>
+      needsAutoLoad(cachedStateFor(entry.type, entry.file), nowMs)
+    );
     if (missing.length > 0) void loadQuota(missing);
   }, [enabled, quotaEntries, loadQuota]);
 

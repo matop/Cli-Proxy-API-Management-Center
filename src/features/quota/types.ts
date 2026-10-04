@@ -7,6 +7,8 @@
  * 初始化时抛错并列出缺失清单，替代旧字符串 styleMap 的静默 class="undefined"。
  */
 
+import type { QuotaPriorityWindow } from './quotaPriority';
+
 export interface QuotaClassMap {
   // 额度行（五个提供商共用）
   quotaRow: string;
@@ -111,4 +113,9 @@ export function bindQuotaClasses(module: Record<string, string>, source: string)
 export interface QuotaBodyProps<TState> {
   quota: TState;
   classes: QuotaClassMap;
+  /**
+   * Binding window when this credential is the one to use first globally
+   * (quotaPriority.rankByPriority). Bodies render the badge on that row only.
+   */
+  useFirst?: QuotaPriorityWindow | null;
 }

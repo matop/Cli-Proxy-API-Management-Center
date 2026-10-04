@@ -6,6 +6,12 @@
  * - requestIdRef：被超越的响应直接丢弃；
  * - cacheGeneration：断线重连后过期请求不得写入新会话缓存。
  * 提交按 provider 分组进行 —— 快的提供商先落地，不等慢的。
+ *
+ * Cache (quotaCache.ts): an automatic load first restores fresh results from
+ * sessionStorage and skips credentials whose result is younger than the TTL.
+ * `{ force: true }` (Refresh all) skips both checks. Every fetch goes through
+ * fetchQuotaShared, so it joins an identical request already in flight from
+ * the dashboard, the Quota page, or a single-card refresh.
  */
 
 import { useCallback, useRef, useState } from 'react';
@@ -14,16 +20,45 @@ import { captureQuotaCacheGeneration, commitIfQuotaCacheCurrent } from '@/stores
 import { getStatusFromError } from '@/utils/quota';
 import { getQuotaCacheKey } from '@/utils/quota/identity';
 import type { QuotaFileEntry } from '../logic';
-import { QUOTA_ADAPTERS, getQuotaSetter } from '../providers';
+import { QUOTA_ADAPTERS, getQuotaMap, getQuotaSetter, type QuotaCardState } from '../providers';
 import type { QuotaProviderType } from '../providers/types';
+import {
+  fetchQuotaShared,
+  persistQuotaSuccess,
+  restorePersistedQuota,
+  selectQuotaLoadTargets,
+} from '../quotaCache';
 
 interface BatchFetchResult {
   name: string;
   cacheKey: string;
   status: 'success' | 'error';
   data?: unknown;
+  fetchedAtMs?: number;
   error?: string;
   errorStatus?: number;
+}
+
+export interface LoadQuotaOptions {
+  /** Explicit user action: ignore the TTL and the persisted copy. In-flight requests are still shared. */
+  force?: boolean;
+}
+
+/**
+ * Restore persisted, still-fresh quota into the store for targets with nothing
+ * loaded. No network. Returns how many were restored.
+ */
+export function restoreQuotaFromSession(targets: readonly QuotaFileEntry[]): number {
+  return restorePersistedQuota(
+    targets,
+    (type, cacheKey) => getQuotaMap(QUOTA_ADAPTERS[type])[cacheKey],
+    (type, cacheKey, state) =>
+      getQuotaSetter(QUOTA_ADAPTERS[type])((prev) => ({
+        ...prev,
+        [cacheKey]: state as unknown as QuotaCardState,
+      })),
+    Date.now()
+  );
 }
 
 export function useQuotaBatchLoader() {
@@ -33,8 +68,16 @@ export function useQuotaBatchLoader() {
   const requestIdRef = useRef(0);
 
   const loadQuota = useCallback(
-    async (targets: QuotaFileEntry[]) => {
+    async (requested: QuotaFileEntry[], options?: LoadQuotaOptions) => {
       if (loadingRef.current) return;
+      const force = Boolean(options?.force);
+      if (!force) restoreQuotaFromSession(requested);
+      const targets = selectQuotaLoadTargets(
+        requested,
+        (type, cacheKey) => getQuotaMap(QUOTA_ADAPTERS[type])[cacheKey],
+        Date.now(),
+        force
+      );
       if (targets.length === 0) return;
       loadingRef.current = true;
       const requestId = ++requestIdRef.current;
@@ -68,8 +111,10 @@ export function useQuotaBatchLoader() {
               entries.map(async ({ file }): Promise<BatchFetchResult> => {
                 const cacheKey = getQuotaCacheKey(file);
                 try {
-                  const data = await adapter.fetchQuota(file, t);
-                  return { name: file.name, cacheKey, status: 'success', data };
+                  const { data, fetchedAtMs } = await fetchQuotaShared(type, file, () =>
+                    adapter.fetchQuota(file, t)
+                  );
+                  return { name: file.name, cacheKey, status: 'success', data, fetchedAtMs };
                 } catch (err: unknown) {
                   const message = err instanceof Error ? err.message : t('common.unknown_error');
                   return {
@@ -85,25 +130,32 @@ export function useQuotaBatchLoader() {
 
             if (requestId !== requestIdRef.current) return;
 
+            const committed: { cacheKey: string; state: QuotaCardState }[] = [];
             setQuota((prev) => {
               const nextState = { ...prev };
               results.forEach((result) => {
                 commitIfQuotaCacheCurrent(
                   cacheGeneration,
                   () => {
-                    nextState[result.cacheKey] =
+                    const state =
                       result.status === 'success'
-                        ? adapter.buildSuccessState(result.data)
+                        ? {
+                            ...adapter.buildSuccessState(result.data),
+                            fetchedAtMs: result.fetchedAtMs,
+                          }
                         : adapter.buildErrorState(
                             result.error || t('common.unknown_error'),
                             result.errorStatus
                           );
+                    nextState[result.cacheKey] = state;
+                    committed.push({ cacheKey: result.cacheKey, state });
                   },
                   result.name
                 );
               });
               return nextState;
             });
+            committed.forEach(({ cacheKey, state }) => persistQuotaSuccess(type, cacheKey, state));
           })
         );
       } finally {

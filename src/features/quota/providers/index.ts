@@ -29,6 +29,8 @@ import { XaiQuotaBody } from './xai/XaiQuotaBody';
 /** 所有 provider 额度状态的公共骨架（各 *QuotaState 的结构子集）。 */
 export interface QuotaCardState {
   status: 'idle' | 'loading' | 'success' | 'error';
+  /** Set on successful results; see quotaCache.ts. */
+  fetchedAtMs?: number;
   error?: string;
   errorStatus?: number;
 }

@@ -11,7 +11,8 @@ import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from '@/components/ui/icons';
 import type { ResolvedTheme } from '@/types';
-import { resolveQuotaErrorMessage } from '@/utils/quota';
+import { useNow } from '@/hooks/useNow';
+import { formatRelativeInstant, resolveQuotaErrorMessage } from '@/utils/quota';
 import { getQuotaDisplayName } from '@/utils/quota/identity';
 import {
   getAuthFileIcon,
@@ -22,6 +23,8 @@ import {
 import { bindQuotaClasses } from '../types';
 import { QUOTA_ADAPTERS, type QuotaCardState } from '../providers';
 import { isQuotaRefreshDisabled, type QuotaFileEntry } from '../logic';
+import { updatedAgoInstant } from '../quotaCache';
+import type { QuotaPriorityWindow } from '../quotaPriority';
 import bodyStyles from './QuotaBody.module.scss';
 import styles from './QuotaCard.module.scss';
 
@@ -31,6 +34,8 @@ const quotaClasses = bindQuotaClasses(bodyStyles, 'QuotaBody.module.scss');
 export type QuotaCardProps = {
   entry: QuotaFileEntry;
   quota?: QuotaCardState;
+  /** Binding window when this card is the one to use first globally, else null. */
+  useFirst?: QuotaPriorityWindow | null;
   resolvedTheme: ResolvedTheme;
   canRefresh: boolean;
   resetting: boolean;
@@ -44,6 +49,7 @@ export function QuotaCard(props: QuotaCardProps) {
   const {
     entry,
     quota,
+    useFirst = null,
     resolvedTheme,
     canRefresh,
     resetting,
@@ -51,7 +57,8 @@ export function QuotaCard(props: QuotaCardProps) {
     onRefresh,
     onReset,
   } = props;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const now = useNow();
   const adapter = QUOTA_ADAPTERS[entry.type];
   const file = entry.file;
   const displayName = getQuotaDisplayName(file);
@@ -77,6 +84,7 @@ export function QuotaCard(props: QuotaCardProps) {
     Boolean(adapter.resetQuota) &&
     quota !== undefined &&
     Boolean(adapter.canResetQuota?.(quota));
+  const fetchedAtMs = status === 'success' ? quota?.fetchedAtMs : undefined;
 
   return (
     <article
@@ -130,7 +138,7 @@ export function QuotaCard(props: QuotaCardProps) {
             {t(`${adapter.i18nPrefix}.load_failed`, { message: errorMessage })}
           </div>
         ) : quota ? (
-          <adapter.Body quota={quota} classes={quotaClasses} />
+          <adapter.Body quota={quota} classes={quotaClasses} useFirst={useFirst} />
         ) : (
           <div className={styles.idleHint}>{t(`${adapter.i18nPrefix}.idle`)}</div>
         )}
@@ -138,6 +146,17 @@ export function QuotaCard(props: QuotaCardProps) {
 
       {status !== 'idle' && (
         <footer className={styles.actionRow}>
+          {fetchedAtMs !== undefined && (
+            <span className={styles.idleHint}>
+              {t('quota_management.updated_relative', {
+                relative: formatRelativeInstant(
+                  updatedAgoInstant(fetchedAtMs, now),
+                  now,
+                  i18n.resolvedLanguage
+                ),
+              })}
+            </span>
+          )}
           {showReset && (
             <button
               type="button"

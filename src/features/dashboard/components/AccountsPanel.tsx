@@ -11,15 +11,10 @@ import {
   getTypeLabel,
   isThemeSurfaceIconProvider,
 } from '@/features/authFiles/constants';
+import { updatedAgoInstant } from '@/features/quota/quotaCache';
+import { rankByPriority, type QuotaPriorityWindow } from '@/features/quota/quotaPriority';
 import type { DashboardAccount } from '../hooks/useDashboardQuota';
-import {
-  accountPlan,
-  extractAccountWindows,
-  quotaTone,
-  rankAccountsByBurnOrder,
-  shortAccountName,
-  type AccountQuotaWindow,
-} from '../quotaRanking';
+import { accountPlan, accountWindowLabel, quotaTone, shortAccountName } from '../accountDisplay';
 import { Meter } from './Meter';
 import styles from './AccountsPanel.module.scss';
 
@@ -35,22 +30,23 @@ export function AccountsPanel({ accounts, loading, resolvedTheme }: AccountsPane
   const now = useNow();
   const locale = i18n.resolvedLanguage;
 
+  // Same ranking as the Quota page's "Use first" badge (quotaPriority.ts).
   const ranked = useMemo(
     () =>
-      rankAccountsByBurnOrder(
-        accounts.map((account) => ({
-          ...account,
-          windows: account.provider ? extractAccountWindows(account.provider, account.quota) : [],
-        })),
+      rankByPriority(
+        accounts,
+        (account) => ({ provider: account.provider, quota: account.quota }),
         now
       ),
     [accounts, now]
   );
 
-  const windowLabel = (window: AccountQuotaWindow) =>
-    window.labelKey ? t(window.labelKey, window.labelParams) : (window.label ?? window.id);
+  const windowLabel = (window: QuotaPriorityWindow) => {
+    const label = accountWindowLabel(window);
+    return 'text' in label ? label.text : t(label.labelKey, label.labelParams);
+  };
 
-  const resetText = (window: AccountQuotaWindow) => {
+  const resetText = (window: QuotaPriorityWindow) => {
     if (window.resetAtMs === null) return null;
     if (window.resetAtMs <= now) return t('dashboard.accounts_reset_passed');
     return t('dashboard.accounts_resets', {
@@ -93,14 +89,16 @@ export function AccountsPanel({ accounts, loading, resolvedTheme }: AccountsPane
         <p className={styles.note}>{t('dashboard.health_empty')}</p>
       ) : (
         <ul className={styles.list}>
-          {ranked.map(({ account, burnWindowId, useFirst }) => {
+          {ranked.map(({ item: account, windows, usability, useFirst }) => {
+            const burnWindowId = usability.kind === 'usable' ? usability.window.rowId : null;
             const file = account.file;
             const iconType = account.provider ?? String(file.type ?? file.provider ?? '');
             const iconSrc = getAuthFileIcon(iconType, resolvedTheme);
             const typeLabel = getTypeLabel(t, iconType);
             const plan = account.provider ? accountPlan(account.provider, account.quota) : null;
-            const note = stateNote(account, account.windows.length);
+            const note = stateNote(account, windows.length);
             const status = account.quota?.status;
+            const fetchedAtMs = status === 'success' ? account.quota?.fetchedAtMs : undefined;
 
             return (
               <li key={account.key}>
@@ -141,6 +139,17 @@ export function AccountsPanel({ accounts, loading, resolvedTheme }: AccountsPane
                     {!file.disabled && file.unavailable && (
                       <span className={styles.badgeBad}>{t('dashboard.health_unavailable')}</span>
                     )}
+                    {fetchedAtMs !== undefined && (
+                      <span className={styles.hint}>
+                        {t('quota_management.updated_relative', {
+                          relative: formatRelativeInstant(
+                            updatedAgoInstant(fetchedAtMs, now),
+                            now,
+                            locale
+                          ),
+                        })}
+                      </span>
+                    )}
                   </div>
 
                   {note ? (
@@ -151,12 +160,12 @@ export function AccountsPanel({ accounts, loading, resolvedTheme }: AccountsPane
                     </p>
                   ) : (
                     <ul className={styles.windows}>
-                      {account.windows.map((window) => {
+                      {windows.map((window) => {
                         const tone = quotaTone(window.remainingPercent);
                         const label = windowLabel(window);
                         const reset = resetText(window);
                         return (
-                          <li key={window.id} className={styles.window}>
+                          <li key={window.rowId} className={styles.window}>
                             <span className={styles.windowLabel} title={label}>
                               {label}
                             </span>
@@ -183,7 +192,7 @@ export function AccountsPanel({ accounts, loading, resolvedTheme }: AccountsPane
                             </span>
                             <span
                               className={`${styles.windowReset} ${
-                                window.id === burnWindowId ? styles.windowResetBurn : ''
+                                window.rowId === burnWindowId ? styles.windowResetBurn : ''
                               }`}
                               title={
                                 window.resetAtMs === null

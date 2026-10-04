@@ -19,6 +19,7 @@ import {
   QUOTA_OPTIONAL_CLASS_KEYS,
   bindQuotaClasses,
 } from '@/features/quota/types';
+import { collectQuotaPriorityWindows, pickPriorityWindow } from '@/features/quota/quotaPriority';
 import { formatInstantShort } from '@/utils/quota';
 import { DAY_MS, HOUR_MS } from '@/utils/time/durations';
 import type { ClaudeQuotaState, CodexQuotaState, KimiQuotaState } from '@/types';
@@ -280,12 +281,19 @@ describe('remaining percent and use-first badge', () => {
     );
   });
 
-  test('badges only the soonest-resetting window with quota left', () => {
+  test('badges the binding window only when the page marks this credential first', () => {
+    const useFirst = pickPriorityWindow(collectQuotaPriorityWindows('claude', quota), now);
+    expect(useFirst?.rowId).toBe('seven-day');
     const markup = renderToStaticMarkup(
-      createElement(ClaudeQuotaBody, { quota, classes: fullClasses })
+      createElement(ClaudeQuotaBody, { quota, classes: fullClasses, useFirst })
     );
     expect(markup.match(/class="quotaUseFirst"/g)).toHaveLength(1);
-    expect(markup).toMatch(/Use first · resets in 4 hours/);
+    expect(markup).toMatch(/Use first · 5% left, lost in 1 day/);
+
+    const unmarked = renderToStaticMarkup(
+      createElement(ClaudeQuotaBody, { quota, classes: fullClasses })
+    );
+    expect(unmarked).not.toContain('quotaUseFirst');
   });
 
   test('renders no badge or low class in a host that does not opt in', () => {

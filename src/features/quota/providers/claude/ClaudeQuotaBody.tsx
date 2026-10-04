@@ -11,19 +11,14 @@ import { QuotaMeter } from '../../components/QuotaMeter';
 import { QuotaPercentLabel } from '../../components/QuotaPercentLabel';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
 import { QuotaUseFirstBadge } from '../../components/QuotaUseFirstBadge';
-import { collectQuotaPriorityWindows, pickPriorityWindow } from '../../quotaPriority';
 import { collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
 import type { QuotaBodyProps } from '../../types';
 
-export function ClaudeQuotaBody({ quota, classes }: QuotaBodyProps<ClaudeQuotaState>) {
+export function ClaudeQuotaBody({ quota, classes, useFirst }: QuotaBodyProps<ClaudeQuotaState>) {
   const { t, i18n } = useTranslation();
   const now = useNow();
   const soonestRowId = useMemo(
     () => pickUrgentRowId(collectQuotaRowInstants('claude', quota), now),
-    [quota, now]
-  );
-  const useFirst = useMemo(
-    () => pickPriorityWindow(collectQuotaPriorityWindows('claude', quota), now),
     [quota, now]
   );
   const windows = quota.windows ?? [];
@@ -81,7 +76,12 @@ export function ClaudeQuotaBody({ quota, classes }: QuotaBodyProps<ClaudeQuotaSt
               </div>
               <QuotaMeter percent={remaining} classes={classes} index={index} />
               {useFirst?.rowId === window.id && useFirst.resetAtMs !== null && (
-                <QuotaUseFirstBadge resetAtMs={useFirst.resetAtMs} nowMs={now} classes={classes} />
+                <QuotaUseFirstBadge
+                  resetAtMs={useFirst.resetAtMs}
+                  remainingPercent={useFirst.remainingPercent}
+                  nowMs={now}
+                  classes={classes}
+                />
               )}
             </div>
           );

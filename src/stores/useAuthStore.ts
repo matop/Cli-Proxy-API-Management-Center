@@ -8,6 +8,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthState, LoginCredentials, ConnectionStatus } from '@/types';
 import { STORAGE_KEY_AUTH } from '@/utils/constants';
 import { obfuscatedStorage } from '@/services/storage/secureStorage';
+import { clearPersistedQuota, getQuotaCacheStorage } from '@/services/storage/quotaCacheStorage';
 import { apiClient } from '@/services/api/client';
 import { useConfigStore } from './useConfigStore';
 import { useModelsStore } from './useModelsStore';
@@ -113,6 +114,7 @@ export const useAuthStore = create<AuthStoreState>()(
         useConfigStore.getState().clearCache();
         useModelsStore.getState().clearCache();
         useQuotaStore.getState().clearQuotaCache();
+        clearPersistedQuota(getQuotaCacheStorage());
         set({
           isAuthenticated: false,
           apiBase: '',

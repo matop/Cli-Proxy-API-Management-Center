@@ -46,13 +46,13 @@ import {
   visibleQuotaTabIds,
   type QuotaFileEntry,
 } from './logic';
-import { priorityResetMs } from './quotaPriority';
+import { priorityResetMs, rankByPriority } from './quotaPriority';
 import { nextRecoveryMs } from './resetSchedule';
 import { QUOTA_ADAPTERS, getQuotaSetter, type QuotaCardState } from './providers';
 import type { QuotaProviderType } from './providers/types';
 import { useDevinQuotaAutoLoad } from './providers/devin/useDevinQuotaAutoLoad';
 import { useQuotaActions } from './hooks/useQuotaActions';
-import { useQuotaBatchLoader } from './hooks/useQuotaBatchLoader';
+import { restoreQuotaFromSession, useQuotaBatchLoader } from './hooks/useQuotaBatchLoader';
 import { readQuotaUiState, writeQuotaUiState } from './uiState';
 import styles from './QuotaPage.module.scss';
 
@@ -188,6 +188,25 @@ export function QuotaPage() {
     [filteredEntries, sortMode, resolveSortInstant]
   );
 
+  // "Use first" marks one card globally: the top of the priority ranking over
+  // every credential, whatever the tab, search, or sort. Separate clock from
+  // sortNow so the default sort keeps a stable pageItems identity.
+  const rankNow = useNow();
+  const useFirst = useMemo(() => {
+    const [top] = rankByPriority(
+      entries,
+      (entry) => ({ provider: entry.type, quota: getQuota(entry) }),
+      rankNow
+    );
+    if (!top?.useFirst || top.usability.kind !== 'usable') return null;
+    return {
+      key: `${top.item.type}:${getQuotaCacheKey(top.item.file)}`,
+      window: top.usability.window,
+    };
+  }, [entries, getQuota, rankNow]);
+  const firstWindowFor = (entry: QuotaFileEntry) =>
+    useFirst?.key === `${entry.type}:${getQuotaCacheKey(entry.file)}` ? useFirst.window : null;
+
   const { pageItems, currentPage, totalPages } = useMemo(
     () => paginate(sortedEntries, page, QUOTA_PAGE_SIZE),
     [sortedEntries, page]
@@ -243,6 +262,13 @@ export function QuotaPage() {
     });
   }, [entries, error, filesGeneration, loading, sessionGeneration]);
 
+  // Show results persisted earlier in this tab (still inside the TTL) without
+  // fetching; cards with nothing persisted stay click-to-load.
+  useEffect(() => {
+    if (loading || error || filesGeneration !== sessionGeneration) return;
+    restoreQuotaFromSession(entries);
+  }, [entries, error, filesGeneration, loading, sessionGeneration]);
+
   /* ---------- 加载与操作 ---------- */
 
   const { batchLoading, loadQuota } = useQuotaBatchLoader();
@@ -280,7 +306,7 @@ export function QuotaPage() {
         disableControls
       )
     ) {
-      void loadQuota(pageItems);
+      void loadQuota(pageItems, { force: true });
     }
   }, [disableControls, error, filesGeneration, loading, loadQuota, pageItems, sessionGeneration]);
 
@@ -426,6 +452,7 @@ export function QuotaPage() {
                 key={`${entry.type}:${getQuotaCacheKey(entry.file)}`}
                 entry={entry}
                 quota={getQuota(entry)}
+                useFirst={firstWindowFor(entry)}
                 resolvedTheme={resolvedTheme}
                 canRefresh={canUseActions && !entry.file.disabled}
                 resetting={resettingQuotaName === getQuotaCacheKey(entry.file)}
