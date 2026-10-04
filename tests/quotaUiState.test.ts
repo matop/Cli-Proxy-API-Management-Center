@@ -56,6 +56,13 @@ describe('quota ui state', () => {
     expect(readQuotaUiState()).toEqual({ tab: 'devin', sortMode: 'soonest' });
   });
 
+  test('accepts the priority sort and keeps stored legacy sort values valid', () => {
+    for (const sortMode of ['priority', 'default', 'soonest'] as const) {
+      writeQuotaUiState({ sortMode });
+      expect(readQuotaUiState()?.sortMode).toBe(sortMode);
+    }
+  });
+
   test('writing one preference preserves the other', () => {
     writeQuotaUiState({ sortMode: 'soonest' });
     writeQuotaUiState({ tab: 'kimi' });

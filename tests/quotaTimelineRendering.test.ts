@@ -162,3 +162,33 @@ describe('QuotaTimeline rendering', () => {
     expect(markup).toBe('');
   });
 });
+
+describe('QuotaTimeline lane chips', () => {
+  test('labels each limit chip as percent left with an accessible name', async () => {
+    const { default: i18n } = await import('../src/i18n/index');
+    const previous = i18n.language;
+    await i18n.changeLanguage('en');
+    try {
+      const markup = renderToStaticMarkup(
+        createElement(QuotaTimeline, {
+          ...baseProps,
+          quotaFor: () => ({
+            status: 'success',
+            windows: [
+              {
+                label: '7-day',
+                usedPercent: 25,
+                resetAtMs: new Date(2026, 7, 1, 12).getTime(),
+                periodHours: 168,
+              },
+            ],
+          }),
+        })
+      );
+      expect(markup).toContain('aria-label="7-day: 75 percent of quota left"');
+      expect(markup).toContain('<b>75% left</b>');
+    } finally {
+      await i18n.changeLanguage(previous);
+    }
+  });
+});

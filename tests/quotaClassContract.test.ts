@@ -13,7 +13,11 @@
  */
 
 import { describe, expect, test } from 'bun:test';
-import { QUOTA_CLASS_KEYS, bindQuotaClasses } from '@/features/quota/types';
+import {
+  QUOTA_CLASS_KEYS,
+  QUOTA_OPTIONAL_CLASS_KEYS,
+  bindQuotaClasses,
+} from '@/features/quota/types';
 
 const HOSTS = {
   'QuotaBody.module.scss': 'src/features/quota/components/QuotaBody.module.scss',
@@ -32,6 +36,14 @@ describe('quota class contract', () => {
       expect(missing).toEqual([]);
     });
   }
+
+  test('QuotaBody.module.scss opts into every optional key', async () => {
+    const css = await readHost(HOSTS['QuotaBody.module.scss']);
+    const missing = QUOTA_OPTIONAL_CLASS_KEYS.filter(
+      (key) => !new RegExp(`^\\s*\\.${key}\\b`, 'm').test(css)
+    );
+    expect(missing).toEqual([]);
+  });
 
   test('bindQuotaClasses reports every missing key rather than the first', () => {
     const partial = Object.fromEntries(QUOTA_CLASS_KEYS.map((key) => [key, `_${key}`]));

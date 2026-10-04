@@ -14,7 +14,11 @@ import i18n from '@/i18n';
 import { CodexQuotaBody } from '@/features/quota/providers/codex/CodexQuotaBody';
 import { ClaudeQuotaBody } from '@/features/quota/providers/claude/ClaudeQuotaBody';
 import { KimiQuotaBody } from '@/features/quota/providers/kimi/KimiQuotaBody';
-import { QUOTA_CLASS_KEYS, bindQuotaClasses } from '@/features/quota/types';
+import {
+  QUOTA_CLASS_KEYS,
+  QUOTA_OPTIONAL_CLASS_KEYS,
+  bindQuotaClasses,
+} from '@/features/quota/types';
 import { formatInstantShort } from '@/utils/quota';
 import { DAY_MS, HOUR_MS } from '@/utils/time/durations';
 import type { ClaudeQuotaState, CodexQuotaState, KimiQuotaState } from '@/types';
@@ -225,5 +229,69 @@ describe('ClaudeQuotaBody', () => {
     expect(markup).toContain('08-06 04:00');
     expect(markup).toMatch(/2 hours/);
     expect(markup).toMatch(/4 days/);
+  });
+});
+
+describe('remaining percent and use-first badge', () => {
+  /** A host that opts into the optional classes, like QuotaBody.module.scss. */
+  const fullClasses = bindQuotaClasses(
+    Object.fromEntries(
+      [...QUOTA_CLASS_KEYS, ...QUOTA_OPTIONAL_CLASS_KEYS].map((key) => [key, key])
+    ),
+    'test-host-full'
+  );
+
+  // The operator's Claude Max account: percent USED per window.
+  const quota: ClaudeQuotaState = {
+    status: 'success',
+    windows: [
+      {
+        id: 'five-hour',
+        label: '5-hour limit',
+        usedPercent: 2,
+        resetLabel: '10/04 06:00',
+        resetAtMs: now + 4 * HOUR_MS,
+        periodHours: 5,
+      },
+      {
+        id: 'seven-day',
+        label: '7-day limit',
+        usedPercent: 95,
+        resetLabel: '10/05 04:00',
+        resetAtMs: now + DAY_MS + HOUR_MS,
+        periodHours: 168,
+      },
+    ],
+  };
+
+  test('labels the percent as remaining with an accessible name', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ClaudeQuotaBody, { quota, classes: fullClasses })
+    );
+    expect(markup).toContain('aria-label="98 percent of quota left">98% left</span>');
+  });
+
+  test('marks a window at or below 10% left as low', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ClaudeQuotaBody, { quota, classes: fullClasses })
+    );
+    expect(markup).toContain(
+      '<span class="quotaPercent quotaPercentLow" aria-label="Low quota: 5 percent left">5% left</span>'
+    );
+  });
+
+  test('badges only the soonest-resetting window with quota left', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ClaudeQuotaBody, { quota, classes: fullClasses })
+    );
+    expect(markup.match(/class="quotaUseFirst"/g)).toHaveLength(1);
+    expect(markup).toMatch(/Use first · resets in 4 hours/);
+  });
+
+  test('renders no badge or low class in a host that does not opt in', () => {
+    const markup = renderToStaticMarkup(createElement(ClaudeQuotaBody, { quota, classes }));
+    expect(markup).toContain('5% left');
+    expect(markup).not.toContain('quotaUseFirst');
+    expect(markup).not.toContain('quotaPercentLow');
   });
 });

@@ -10,6 +10,7 @@ import {
   paginate,
   resolveQuotaProviderType,
   sortQuotaEntries,
+  visibleQuotaTabIds,
   type QuotaFileEntry,
 } from '@/features/quota/logic';
 import type { AuthFileItem } from '@/types';
@@ -244,10 +245,42 @@ describe('sortQuotaEntries', () => {
     expect(input).toEqual(entries);
   });
 
+  test('priority mode orders by the injected instant like soonest', () => {
+    const sorted = sortQuotaEntries(
+      entries,
+      'priority',
+      resolver({ 'codex-b.json': 200, 'kimi-a.json': 100 })
+    );
+    expect(byName(sorted).slice(0, 2)).toEqual(['kimi-a.json', 'codex-b.json']);
+  });
+
   test('sorts before paginating, so the globally soonest lands on page one', () => {
     // Last in the default order, first to recover.
     const last = entries[entries.length - 1].file.name;
     const sorted = sortQuotaEntries(entries, 'soonest', resolver({ [last]: 1 }));
     expect(paginate(sorted, 1, 2).pageItems[0].file.name).toBe(last);
+  });
+});
+
+describe('visibleQuotaTabIds', () => {
+  const counts = buildTabCounts(classifyQuotaFiles(FILES));
+
+  test('hides providers with no credentials and keeps the tab order', () => {
+    expect(visibleQuotaTabIds(counts, 'all')).toEqual(['all', 'claude', 'codex', 'xai', 'kimi']);
+  });
+
+  test('keeps the active tab even when it has no credentials', () => {
+    expect(visibleQuotaTabIds(counts, 'devin')).toEqual([
+      'all',
+      'claude',
+      'codex',
+      'xai',
+      'kimi',
+      'devin',
+    ]);
+  });
+
+  test('keeps only All when nothing is loaded', () => {
+    expect(visibleQuotaTabIds(buildTabCounts([]), 'all')).toEqual(['all']);
   });
 });
