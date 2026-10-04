@@ -263,6 +263,14 @@
   grid-column: 3 / -1;
 }
 
+.identity > .hint {
+  grid-column: 2 / -1;
+  grid-row: 4;
+  margin-top: 6px;
+  min-width: 0;
+  @include text-ellipsis;
+}
+
 .useFirst {
   padding: 2px 10px 2px 8px;
   font-size: $text-sm;
