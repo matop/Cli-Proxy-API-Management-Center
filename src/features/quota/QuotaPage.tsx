@@ -30,6 +30,7 @@ import {
   CARD_ENTRANCE_BUDGET_MS,
   DEFAULT_QUOTA_SORT_MODE,
   QUOTA_PAGE_SIZE,
+  QUOTA_SORT_LABEL_KEYS,
   QUOTA_SORT_MODES,
   QUOTA_TAB_ORDER,
   type QuotaSortMode,
@@ -225,8 +226,7 @@ export function QuotaPage() {
   }, []);
 
   const sortOptions = useMemo(
-    () =>
-      QUOTA_SORT_MODES.map((mode) => ({ value: mode, label: t(`quota_management.sort_${mode}`) })),
+    () => QUOTA_SORT_MODES.map((mode) => ({ value: mode, label: t(QUOTA_SORT_LABEL_KEYS[mode]) })),
     [t]
   );
 

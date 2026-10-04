@@ -313,7 +313,7 @@ export function pickPriorityWindow(
   return usability.kind === 'usable' ? usability.window : null;
 }
 
-/** Sort key for "Resets soonest": reset instant of the binding window, or null. */
+/** Sort key for "Use first (soonest loss)": reset instant of the binding window, or null. */
 export function priorityResetMs(
   provider: QuotaProviderType | null,
   quota: unknown,

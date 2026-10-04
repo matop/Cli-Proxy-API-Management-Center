@@ -17,13 +17,26 @@ export type QuotaTabId = 'all' | QuotaProviderType;
 export const QUOTA_PAGE_SIZE = 20;
 
 /**
- * 卡片排序：priority = 有剩余额度且最快重置的窗口优先（未选择时的默认）；
- * default = provider 分组序；soonest = 最快恢复优先。
- * 'default' 与 'soonest' 是已持久化的取值，保持有效。
+ * Card sort modes. The values are persisted (uiState.ts), so they never change;
+ * only their labels do.
+ * - priority: reset of the binding window, the account-wide window with the
+ *   least quota left that is above 0% (quotaPriority.priorityResetMs). Blocked
+ *   and unknown credentials sink. Default when nothing is stored.
+ * - default: provider-grouped order.
+ * - soonest: earliest upcoming reset of any row, account-wide or per-model,
+ *   plus available Codex reset credits, whatever the quota left (Meta skips
+ *   windows at 0% used) (resetSchedule.nextRecoveryMs).
  */
 export const QUOTA_SORT_MODES = ['priority', 'default', 'soonest'] as const;
 
 export type QuotaSortMode = (typeof QUOTA_SORT_MODES)[number];
+
+/** Menu label per stored sort value. */
+export const QUOTA_SORT_LABEL_KEYS: Record<QuotaSortMode, string> = {
+  priority: 'quota_management.sort_priority',
+  default: 'quota_management.sort_default',
+  soonest: 'quota_management.sort_soonest',
+};
 
 /** Sort used when the session has no stored choice. */
 export const DEFAULT_QUOTA_SORT_MODE: QuotaSortMode = 'priority';
