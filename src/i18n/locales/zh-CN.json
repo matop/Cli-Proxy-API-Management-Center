@@ -178,6 +178,7 @@
     "accounts_hint": "按各账号最紧的全账号额度窗口的重置时间排序，单模型额度不计入。未用额度在重置时作废。",
     "accounts_open_quota": "打开额度页",
     "accounts_refresh_quota": "刷新额度",
+    "accounts_not_loaded": "尚未加载。请点击“刷新额度”。",
     "accounts_list_loading": "正在加载凭证…",
     "accounts_list_error": "凭证加载失败：{{message}}",
     "accounts_list_retry": "重试",

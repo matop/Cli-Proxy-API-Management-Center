@@ -180,6 +180,7 @@
     "accounts_hint": "Ranked by when each account's tightest account-wide limit resets. Model-specific limits don't count. Unused quota is lost at reset.",
     "accounts_open_quota": "Open quota page",
     "accounts_refresh_quota": "Refresh quota",
+    "accounts_not_loaded": "Not loaded. Use Refresh quota.",
     "accounts_list_loading": "Loading credentials…",
     "accounts_list_error": "Credentials failed to load: {{message}}",
     "accounts_list_retry": "Retry",

@@ -178,6 +178,7 @@
     "accounts_hint": "依各帳號最緊的全帳號額度視窗的重置時間排序，單模型額度不計入。未用額度在重置時作廢。",
     "accounts_open_quota": "開啟額度頁",
     "accounts_refresh_quota": "重新整理額度",
+    "accounts_not_loaded": "尚未載入。請點選「重新整理額度」。",
     "accounts_list_loading": "正在載入憑證…",
     "accounts_list_error": "憑證載入失敗：{{message}}",
     "accounts_list_retry": "重試",

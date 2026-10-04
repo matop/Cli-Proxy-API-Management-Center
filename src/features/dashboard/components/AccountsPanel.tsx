@@ -84,7 +84,8 @@ export function AccountsPanel({
     if (account.file.disabled) return t('dashboard.accounts_disabled_note');
     if (!account.provider) return t('dashboard.accounts_no_quota_api');
     const status = account.quota?.status ?? 'idle';
-    if (status === 'idle' || status === 'loading') return t('dashboard.accounts_loading');
+    if (status === 'idle') return t('dashboard.accounts_not_loaded');
+    if (status === 'loading') return t('dashboard.accounts_loading');
     if (status === 'error') {
       return t('dashboard.accounts_error', {
         message: resolveQuotaErrorMessage(
