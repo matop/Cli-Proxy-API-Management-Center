@@ -1,8 +1,12 @@
 import { toneForSuccessRate, type MeterTone } from '../utils';
 import styles from './Meter.module.scss';
 
-const TONE_COLORS: Record<MeterTone, string> = {
+/** `medium` is set only by quota meters (accountDisplay.quotaTone), never by success rates. */
+type MeterFillTone = MeterTone | 'medium';
+
+const TONE_COLORS: Record<MeterFillTone, string> = {
   good: 'var(--viz-success, #10b981)',
+  medium: 'var(--quota-medium-color)',
   warning: 'var(--amber-color)',
   critical: 'var(--viz-failure, #c65746)',
   idle: 'var(--text-quaternary)',
@@ -11,7 +15,7 @@ const TONE_COLORS: Record<MeterTone, string> = {
 interface MeterProps {
   /** 0–100；null 表示窗口内无请求 */
   value: number | null;
-  tone?: MeterTone;
+  tone?: MeterFillTone;
   ariaLabel: string;
   className?: string;
 }

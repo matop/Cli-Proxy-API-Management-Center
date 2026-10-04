@@ -7,20 +7,23 @@
  */
 
 import type { QuotaProviderType } from '@/features/quota/providers/types';
-import {
-  LOW_QUOTA_REMAINING_PERCENT,
-  type QuotaPriorityWindow,
-} from '@/features/quota/quotaPriority';
+import { quotaLevel, type QuotaLevel } from '@/features/quota/quotaLevel';
+import type { QuotaPriorityWindow } from '@/features/quota/quotaPriority';
 import { PREMIUM_CODEX_PLAN_TYPES, normalizePlanType } from '@/utils/quota';
 
-export type QuotaTone = 'good' | 'warning' | 'critical' | 'idle';
+export type QuotaTone = 'good' | 'medium' | 'warning' | 'critical' | 'idle';
 
-/** Severity of a window's remaining percent. */
+const TONE_BY_LEVEL: Record<QuotaLevel, QuotaTone> = {
+  unknown: 'idle',
+  exhausted: 'critical',
+  low: 'warning',
+  medium: 'medium',
+  healthy: 'good',
+};
+
+/** Meter tone of a window's remaining percent; bands live in quotaLevel.ts. */
 export function quotaTone(remainingPercent: number | null): QuotaTone {
-  if (remainingPercent === null) return 'idle';
-  if (remainingPercent <= 0) return 'critical';
-  if (remainingPercent <= LOW_QUOTA_REMAINING_PERCENT) return 'warning';
-  return 'good';
+  return TONE_BY_LEVEL[quotaLevel(remainingPercent)];
 }
 
 /** xAI billing rows carry no parser label; the dashboard names them itself. */

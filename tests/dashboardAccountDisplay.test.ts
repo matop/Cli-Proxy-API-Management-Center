@@ -8,12 +8,14 @@ import {
 import { summarizeDashboardStatus } from '../src/features/dashboard/utils';
 
 describe('quotaTone', () => {
-  test('warns at or below ten percent left and is critical at zero', () => {
+  test('warns at or below ten percent left, is critical at zero, medium up to 30', () => {
     expect(quotaTone(null)).toBe('idle');
     expect(quotaTone(0)).toBe('critical');
     expect(quotaTone(5)).toBe('warning');
     expect(quotaTone(10)).toBe('warning');
-    expect(quotaTone(10.5)).toBe('good');
+    expect(quotaTone(10.5)).toBe('medium');
+    expect(quotaTone(30)).toBe('medium');
+    expect(quotaTone(30.5)).toBe('good');
     expect(quotaTone(98)).toBe('good');
   });
 });

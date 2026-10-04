@@ -134,7 +134,7 @@
 }
 
 /* ---------- 水位条（QuotaMeter）----------
- * 轨道退居背景（8% 墨色），填充按剩余量三档着色；
+ * 轨道退居背景（8% 墨色），填充按 quotaLevel.ts 分档着色，颜色与仪表盘 Meter 一致；
  * percent === null 时宽度为 0 —— 未知不着色。 */
 
 .quotaBar {
@@ -171,7 +171,7 @@
 }
 
 .quotaBarFillLow {
-  background: var(--viz-failure);
+  background: var(--amber-color);
 }
 
 /* ---------- Antigravity 分组 ---------- */
