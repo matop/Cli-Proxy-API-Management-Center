@@ -865,6 +865,8 @@
     --shell-gutter: 12px;
     --sidebar-panel-width: min(280px, calc(100vw - 24px));
     --floating-control-size: 36px;
+    /* Outer size of .mobile-sidebar-actions: 5px padding and 1px border per side. */
+    --mobile-toggle-box: calc(var(--floating-control-size) + 12px);
   }
 
   .top-gradient-blur {
@@ -972,6 +974,16 @@
 
     &.open {
       transform: translateX(0);
+    }
+
+    /* The floating toolbars (menu/close toggle on the left, header actions on
+       the right) stay above the open drawer's top edge, since the header's
+       z-index is higher. Start the brand below that row so neither covers the
+       logo or its text at any width. 14px is the drawer's own top padding and
+       8px the gap. */
+    .sidebar-header,
+    &.collapsed .sidebar-header {
+      padding-top: calc(var(--shell-gutter) + var(--mobile-toggle-box) - 14px + 8px);
     }
 
     &.collapsed {
