@@ -5,10 +5,11 @@ import { useNow } from '@/hooks/useNow';
 import { buildResetDisplay } from '@/utils/quota';
 import { QuotaMeter } from '../../components/QuotaMeter';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
+import { QuotaUseFirstBadge } from '../../components/QuotaUseFirstBadge';
 import { collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
 import type { QuotaBodyProps } from '../../types';
 
-export function MetaQuotaBody({ quota, classes }: QuotaBodyProps<MetaQuotaState>) {
+export function MetaQuotaBody({ quota, classes, useFirst }: QuotaBodyProps<MetaQuotaState>) {
   const { t, i18n } = useTranslation();
   const now = useNow();
   const soonestRowId = useMemo(
@@ -75,6 +76,14 @@ export function MetaQuotaBody({ quota, classes }: QuotaBodyProps<MetaQuotaState>
             >
               <QuotaMeter percent={remaining} classes={classes} index={index} />
             </div>
+            {useFirst?.rowId === window.id && useFirst.resetAtMs !== null && (
+              <QuotaUseFirstBadge
+                resetAtMs={useFirst.resetAtMs}
+                remainingPercent={useFirst.remainingPercent}
+                nowMs={now}
+                classes={classes}
+              />
+            )}
           </div>
         );
       })}

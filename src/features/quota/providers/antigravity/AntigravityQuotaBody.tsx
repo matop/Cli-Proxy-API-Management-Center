@@ -108,6 +108,10 @@ const getAntigravityPlanLabel = (
   );
 };
 
+/**
+ * Takes no `useFirst`: every bucket is per model group, so quotaPriority scopes
+ * them all and an Antigravity credential never ranks first.
+ */
 export function AntigravityQuotaBody({ quota, classes }: QuotaBodyProps<AntigravityQuotaState>) {
   const { t } = useTranslation();
   const groups = quota.groups ?? [];
