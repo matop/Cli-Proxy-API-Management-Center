@@ -291,6 +291,7 @@ export function useDashboardOverview() {
     traffic,
     providers,
     credentials,
+    authFiles,
     refresh,
   };
 }

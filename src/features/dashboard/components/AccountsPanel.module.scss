@@ -1,0 +1,220 @@
+@use '../../../styles/mixins' as *;
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.hint {
+  flex: 1 1 auto;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.headLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-active);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.note {
+  margin: 0;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.6fr);
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--bg-secondary);
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.rowFirst {
+  border-color: color-mix(in srgb, var(--viz-success) 45%, transparent);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  min-width: 0;
+}
+
+.iconWrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.iconFallback {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: $font-mono;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.plan,
+.useFirst,
+.badgeBad {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.plan {
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.useFirst {
+  background: color-mix(in srgb, var(--viz-success) 16%, transparent);
+  color: var(--viz-success);
+}
+
+.badgeBad {
+  background: color-mix(in srgb, var(--viz-failure) 14%, transparent);
+  color: var(--viz-failure);
+}
+
+.stateNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.stateError {
+  color: var(--viz-failure);
+}
+
+.windows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.window {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.9fr) minmax(60px, 1fr) 64px minmax(96px, auto);
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.windowLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.windowMeter {
+  min-width: 0;
+}
+
+.windowLeft {
+  font-family: $font-mono;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  text-align: right;
+  color: var(--text-primary);
+}
+
+.windowLow {
+  color: var(--amber-color);
+}
+
+.windowEmpty {
+  color: var(--viz-failure);
+}
+
+.windowReset {
+  font-family: $font-mono;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.windowResetBurn {
+  color: var(--viz-success);
+  font-weight: 650;
+}

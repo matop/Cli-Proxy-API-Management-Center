@@ -74,3 +74,48 @@ export function axisMax(peak: number, intervals: number): number {
   const step = Math.max(1, Math.ceil(niceCeil(peak / intervals)));
   return step * intervals;
 }
+
+export type DashboardIssueKey = 'status_unavailable' | 'status_failures';
+
+export interface DashboardStatus {
+  tone: MeterTone;
+  /** i18n key under `dashboard.` for the headline when there are no issues. */
+  headlineKey: 'status_healthy' | 'status_offline' | 'status_connecting' | null;
+  /** Problems to list, in display order; empty when healthy. */
+  issues: Array<{ key: DashboardIssueKey; count: number }>;
+}
+
+/**
+ * One-line verdict for the top of the dashboard.
+ *
+ * `failuresInWindow` must be the bucketed rolling-window count
+ * (TrafficWindow.totalFailure), not the lifetime per-credential counters.
+ */
+export function summarizeDashboardStatus(input: {
+  connectionStatus: string;
+  unavailableCredentials: number | null;
+  failuresInWindow: number;
+}): DashboardStatus {
+  if (input.connectionStatus !== 'connected') {
+    return {
+      tone: input.connectionStatus === 'connecting' ? 'warning' : 'idle',
+      headlineKey: input.connectionStatus === 'connecting' ? 'status_connecting' : 'status_offline',
+      issues: [],
+    };
+  }
+
+  const issues: DashboardStatus['issues'] = [];
+  if (input.unavailableCredentials && input.unavailableCredentials > 0) {
+    issues.push({ key: 'status_unavailable', count: input.unavailableCredentials });
+  }
+  if (input.failuresInWindow > 0) {
+    issues.push({ key: 'status_failures', count: input.failuresInWindow });
+  }
+
+  if (issues.length === 0) return { tone: 'good', headlineKey: 'status_healthy', issues };
+  return {
+    tone: issues.some((issue) => issue.key === 'status_unavailable') ? 'critical' : 'warning',
+    headlineKey: null,
+    issues,
+  };
+}
