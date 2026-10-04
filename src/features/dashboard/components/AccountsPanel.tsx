@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ResolvedTheme } from '@/types';
@@ -15,6 +15,7 @@ import { updatedAgoInstant } from '@/features/quota/quotaCache';
 import { rankByPriority, type QuotaPriorityWindow } from '@/features/quota/quotaPriority';
 import type { DashboardAccount } from '../hooks/useDashboardQuota';
 import { accountPlan, accountWindowLabel, quotaTone, shortAccountName } from '../accountDisplay';
+import { Button } from '@/components/ui/Button';
 import { Meter } from './Meter';
 import styles from './AccountsPanel.module.scss';
 
@@ -22,11 +23,31 @@ interface AccountsPanelProps {
   accounts: DashboardAccount[];
   /** True until the credential list itself has loaded. */
   loading: boolean;
+  /** Last failed credential list load (may be empty when unknown); null otherwise. */
+  error: string | null;
+  /** Reloads the credential list; the dashboard passes its header refresh. */
+  onRetry: () => Promise<void> | void;
   resolvedTheme: ResolvedTheme;
 }
 
-export function AccountsPanel({ accounts, loading, resolvedTheme }: AccountsPanelProps) {
+export function AccountsPanel({
+  accounts,
+  loading,
+  error,
+  onRetry,
+  resolvedTheme,
+}: AccountsPanelProps) {
   const { t, i18n } = useTranslation();
+  const [retrying, setRetrying] = useState(false);
+
+  const retry = async () => {
+    setRetrying(true);
+    try {
+      await onRetry();
+    } finally {
+      setRetrying(false);
+    }
+  };
   const now = useNow();
   const locale = i18n.resolvedLanguage;
 
@@ -83,7 +104,18 @@ export function AccountsPanel({ accounts, loading, resolvedTheme }: AccountsPane
         </Link>
       </header>
 
-      {loading && accounts.length === 0 ? (
+      {error !== null && accounts.length === 0 ? (
+        <div className={`${styles.note} ${styles.listError}`} role="alert">
+          <p className={styles.stateError}>
+            {t('dashboard.accounts_list_error', {
+              message: error || t('common.unknown_error'),
+            })}
+          </p>
+          <Button type="button" variant="secondary" size="sm" loading={retrying} onClick={retry}>
+            {t('dashboard.accounts_list_retry')}
+          </Button>
+        </div>
+      ) : loading && accounts.length === 0 ? (
         <p className={styles.note}>{t('dashboard.accounts_list_loading')}</p>
       ) : accounts.length === 0 ? (
         <p className={styles.note}>{t('dashboard.health_empty')}</p>

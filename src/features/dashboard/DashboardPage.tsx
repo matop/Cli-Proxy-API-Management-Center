@@ -43,6 +43,7 @@ export function DashboardPage() {
     providers,
     credentials,
     authFiles,
+    authFilesError,
     refresh,
   } = useDashboardOverview();
 
@@ -146,7 +147,9 @@ export function DashboardPage() {
         </div>
         <AccountsPanel
           accounts={accounts}
-          loading={connected && authFiles === null}
+          loading={connected && authFiles === null && authFilesError === null}
+          error={authFilesError}
+          onRetry={refresh}
           resolvedTheme={resolvedTheme}
         />
       </section>

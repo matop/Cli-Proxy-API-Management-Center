@@ -180,6 +180,8 @@
     "accounts_hint": "Ranked by when each account's tightest account-wide limit resets. Model-specific limits don't count. Unused quota is lost at reset.",
     "accounts_open_quota": "Open quota page",
     "accounts_list_loading": "Loading credentials…",
+    "accounts_list_error": "Credentials failed to load: {{message}}",
+    "accounts_list_retry": "Retry",
     "accounts_loading": "Loading quota…",
     "accounts_error": "Quota failed to load: {{message}}",
     "accounts_no_quota_api": "This provider does not report quota",

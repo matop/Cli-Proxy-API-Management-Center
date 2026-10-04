@@ -100,6 +100,19 @@
   color: var(--text-tertiary);
 }
 
+/* Credential list failed to load: message plus a retry button. */
+.listError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+
+  .stateError {
+    margin: 0;
+    justify-content: center;
+  }
+}
+
 /* ---------- account rows ---------- */
 
 .list {

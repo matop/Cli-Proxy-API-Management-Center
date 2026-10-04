@@ -3,6 +3,7 @@ import { authFilesApi } from '@/services/api';
 import { useAuthStore, useConfigStore, useModelsStore } from '@/stores';
 import { useApiKeysForModels } from '@/hooks/useApiKeysForModels';
 import { useProviderRecentRequests } from '@/components/providers/hooks/useProviderRecentRequests';
+import { getErrorMessage } from '@/utils/helpers';
 import type { Config } from '@/types';
 import type { AuthFileItem } from '@/types/authFile';
 import type { CredentialHealth, DashboardCounts } from '../types';
@@ -41,14 +42,19 @@ export function useDashboardOverview() {
   });
 
   const [authFiles, setAuthFiles] = useState<AuthFileItem[] | null>(null);
+  // Null while loading or after success. Without it a failed load leaves
+  // authFiles null, which the Accounts panel reads as still loading.
+  const [authFilesError, setAuthFilesError] = useState<string | null>(null);
 
   const loadAuthFiles = useCallback(async () => {
     if (!connected) return;
     try {
       const response = await authFilesApi.list();
       setAuthFiles(response.files);
-    } catch {
+      setAuthFilesError(null);
+    } catch (error) {
       setAuthFiles(null);
+      setAuthFilesError(getErrorMessage(error));
     }
   }, [connected]);
 
@@ -136,6 +142,7 @@ export function useDashboardOverview() {
     providers,
     credentials,
     authFiles,
+    authFilesError,
     refresh,
   };
 }
