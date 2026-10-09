@@ -19,6 +19,7 @@ import {
 import type { AuthFileItem, NotificationType } from '@/types';
 import { getStatusFromError } from '@/utils/quota';
 import { getQuotaCacheKey } from '@/utils/quota/identity';
+import { enrichQuotaInBackground } from '../quotaEnrichment';
 import { getQuotaMap, getQuotaSetter, type QuotaAdapter, type QuotaCardState } from '../providers';
 import { fetchQuotaShared, persistQuotaSuccess } from '../quotaCache';
 
@@ -57,6 +58,7 @@ export async function refreshQuotaEntry(
         [cacheKey]: state,
       }));
       persistQuotaSuccess(adapter.type, cacheKey, state);
+      void enrichQuotaInBackground(adapter, file, data, state, t);
       notify(t('auth_files.quota_refresh_success', { name: file.name }), 'success');
     });
   } catch (err: unknown) {

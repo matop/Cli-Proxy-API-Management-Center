@@ -21,6 +21,7 @@ import { getStatusFromError } from '@/utils/quota';
 import { getQuotaCacheKey } from '@/utils/quota/identity';
 import type { QuotaFileEntry } from '../logic';
 import { QUOTA_ADAPTERS, getQuotaMap, getQuotaSetter, type QuotaCardState } from '../providers';
+import { enrichQuotaInBackground } from '../quotaEnrichment';
 import type { QuotaProviderType } from '../providers/types';
 import type { QuotaCacheStorage } from '@/services/storage/quotaCacheStorage';
 import {
@@ -137,10 +138,10 @@ export function useQuotaBatchLoader() {
 
             if (requestId !== requestIdRef.current) return;
 
-            const committed: { cacheKey: string; state: QuotaCardState }[] = [];
+            const committed: { cacheKey: string; state: QuotaCardState; index: number }[] = [];
             setQuota((prev) => {
               const nextState = { ...prev };
-              results.forEach((result) => {
+              results.forEach((result, index) => {
                 commitIfQuotaCacheCurrent(
                   cacheGeneration,
                   () => {
@@ -155,14 +156,20 @@ export function useQuotaBatchLoader() {
                             result.errorStatus
                           );
                     nextState[result.cacheKey] = state;
-                    committed.push({ cacheKey: result.cacheKey, state });
+                    committed.push({ cacheKey: result.cacheKey, state, index });
                   },
                   result.name
                 );
               });
               return nextState;
             });
-            committed.forEach(({ cacheKey, state }) => persistQuotaSuccess(type, cacheKey, state));
+            committed.forEach(({ cacheKey, state, index }) => {
+              persistQuotaSuccess(type, cacheKey, state);
+              const result = results[index];
+              if (result.status === 'success') {
+                void enrichQuotaInBackground(adapter, entries[index].file, result.data, state, t);
+              }
+            });
           })
         );
       } finally {
