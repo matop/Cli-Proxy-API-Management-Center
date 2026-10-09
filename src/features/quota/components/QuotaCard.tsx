@@ -72,9 +72,13 @@ export function QuotaCard(props: QuotaCardProps) {
 
   const status = quota?.status ?? 'idle';
   const loading = status === 'loading';
+  // Opening a page sends no upstream request: read reset grants only after a
+  // quota fetch that resolved while this card was mounted, not for restored data.
+  const [mountedAtMs] = useState(() => Date.now());
+  const fetchedSinceMount = (quota?.fetchedAtMs ?? -Infinity) >= mountedAtMs;
   const claudeReset = useClaudeResetGrants(
     file,
-    entry.type === 'claude' && status !== 'idle',
+    entry.type === 'claude' && status !== 'idle' && fetchedSinceMount,
     !canRefresh || loading || resetting,
     quota,
     onRefresh

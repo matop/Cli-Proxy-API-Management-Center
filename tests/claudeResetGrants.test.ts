@@ -352,3 +352,9 @@ test('Claude card uses Codex count and action styles and shared confirmation, no
   expect(hook).not.toContain('<Modal');
   expect(hook).not.toContain('status.grants.map');
 });
+
+test('Claude card reads grants only after a quota fetch made while it is mounted', async () => {
+  const card = await Bun.file('src/features/quota/components/QuotaCard.tsx').text();
+  expect(card).toContain('(quota?.fetchedAtMs ?? -Infinity) >= mountedAtMs');
+  expect(card).toContain("entry.type === 'claude' && status !== 'idle' && fetchedSinceMount");
+});
