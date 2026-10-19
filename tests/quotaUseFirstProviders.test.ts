@@ -193,10 +193,11 @@ describe('use-first badge on newly supported providers', () => {
     expect(markup).toContain('>80% left</span>');
   });
 
-  test('xAI monthly credits are labelled as left; weekly keeps its used wording', () => {
+  test('xAI monthly credits and the weekly limit are labelled as left', () => {
     const markup = renderToStaticMarkup(createElement(XaiQuotaBody, { quota: xai, classes }));
     expect(markup).toContain('>70% left</span>');
-    expect(markup).toContain('Used 92%');
+    expect(markup).toContain('>8% left</span>');
+    expect(markup).not.toContain('Used 92%');
   });
 
   test('xAI monthly billing never ranks, so a monthly-only account gets no badge', () => {

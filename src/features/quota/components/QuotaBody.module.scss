@@ -135,6 +135,8 @@
 
 .quotaAmount {
   font-family: $font-mono;
+  font-size: $text-sm;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
 }
@@ -300,8 +302,9 @@
 .codexResetCreditRow {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: $spacing-sm;
+  gap: 2px $spacing-sm;
   padding: 6px 8px;
   border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
   border-radius: $radius-sm;
@@ -327,8 +330,8 @@
   color: var(--text-primary);
   font-weight: 600;
   text-align: right;
-  overflow-wrap: anywhere;
-  min-width: 0;
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 .codexResetCreditsError {

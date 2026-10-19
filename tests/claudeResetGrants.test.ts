@@ -358,3 +358,19 @@ test('Claude card reads grants only after a quota fetch made while it is mounted
   expect(card).toContain('(quota?.fetchedAtMs ?? -Infinity) >= mountedAtMs');
   expect(card).toContain("entry.type === 'claude' && status !== 'idle' && fetchedSinceMount");
 });
+
+test('account reads map upstream 429 to a sanitized typed rate-limit failure', async () => {
+  let calls = 0;
+  apiCallApi.request = async () => {
+    calls += 1;
+    return { statusCode: 429, body: 'private upstream detail', bodyText: '', header: {} };
+  };
+  for (const read of [readClaudeResetGrants, readClaudeOrganization]) {
+    await expect(read('index')).rejects.toMatchObject({
+      name: 'AnthropicResetGrantError',
+      code: 'rate_limited',
+      message: 'Anthropic reset-grant read failed (rate_limited)',
+    });
+  }
+  expect(calls).toBe(2); // Neither read retries.
+});
