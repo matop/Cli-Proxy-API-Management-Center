@@ -7,6 +7,7 @@
  * 初始化时抛错并列出缺失清单，替代旧字符串 styleMap 的静默 class="undefined"。
  */
 
+import type { ReactNode } from 'react';
 import type { QuotaPriorityWindow } from './quotaPriority';
 
 export interface QuotaClassMap {
@@ -126,4 +127,8 @@ export interface QuotaBodyProps<TState> {
    * (quotaPriority.rankByPriority). Bodies render the badge on that row only.
    */
   useFirst?: QuotaPriorityWindow | null;
+  /** Host-owned chips appended to the provider's plan row (`codexPlanItem` spans). */
+  planItems?: ReactNode;
+  /** Host-owned content placed right after the plan row, before usage rows. */
+  afterPlan?: ReactNode;
 }
